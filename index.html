@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Без этой строки на телефоне всё будет мелким -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Школьный двор</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+    <!-- ЭКРАН 1. Вход: код школы + ник. Никаких фамилий и телефонов -->
+    <section class="screen" id="login">
+        <h1>Школьный двор</h1>
+        <p class="muted">Приложение для учеников школы. Вход только по коду, который выдаёт классный руководитель.</p>
+        <label>Код школы
+            <input type="text" placeholder="Например, 1234">
+        </label>
+        <label>Ник (не фамилия!)
+            <input type="text" placeholder="Например, Котик_7Б">
+        </label>
+        <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
+        <a class="btn" href="#rules">Войти</a>
+    </section>
+
+    <!-- ЭКРАН 2. Правила общения — первый экран после входа -->
+    <section class="screen" id="rules">
+        <h1>Правила общения</h1>
+        <ol class="rules">
+            <li>Общаемся дружелюбно и уважаем друг друга.</li>
+            <li>Не публикуем чужие фото, фамилии и телефоны.</li>
+            <li>Не оскорбляем и не высмеиваем.</li>
+            <li>Увидел плохое — нажми «Пожаловаться».</li>
+            <li>Личные сообщения — только если согласны оба.</li>
+        </ol>
+        <a class="btn" href="#chat">Принимаю</a>
+    </section>
+
+    <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
+    <section class="screen" id="chat">
+        <h1>Чат: клуб робототехники</h1>
+        <div class="message">
+            <b>Котик_7Б</b>
+            <p>Кто идёт в пятницу на турнир по роботам?</p>
+            <div class="actions"><button>Скрыть</button><button>Пожаловаться</button></div>
+        </div>
+        <div class="message">
+            <b>Пиксель_8А</b>
+            <p>Я иду! Нужен ещё один человек в команду.</p>
+            <div class="actions"><button>Скрыть</button><button>Пожаловаться</button></div>
+        </div>
+        <div class="message">
+            <b>Сова_9В</b>
+            <p>Могу помочь с программированием.</p>
+            <div class="actions"><button>Скрыть</button><button>Пожаловаться</button></div>
+        </div>
+        <div class="send">
+            <input type="text" placeholder="Сообщение...">
+            <button class="btn small">Отправить</button>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 4. Кружки по интересам -->
+    <section class="screen" id="clubs">
+        <h1>Кружки по интересам</h1>
+        <div class="grid">
+            <a class="club" href="#chat"><span class="circle c1"></span>Музыка</a>
+            <a class="club" href="#chat"><span class="circle c2"></span>Баскетбол</a>
+            <a class="club" href="#chat"><span class="circle c3"></span>Роботы</a>
+            <a class="club" href="#chat"><span class="circle c4"></span>Книги</a>
+            <a class="club" href="#chat"><span class="circle c5"></span>Фото</a>
+            <a class="club" href="#chat"><span class="circle c6"></span>Экология</a>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 5. Инициативы: предложил — собрал людей — сделал -->
+    <section class="screen" id="ideas">
+        <h1>Инициативы</h1>
+        <div class="card">
+            <h2>Покрасим скамейки во дворе</h2>
+            <p class="muted">Предложил: Сова_9В</p>
+            <p>Участников: <b>3</b></p>
+            <button class="btn">Я в деле</button>
+        </div>
+        <div class="card">
+            <h2>Соберём команду на хакатон</h2>
+            <p class="muted">Предложил: Пиксель_8А</p>
+            <p>Участников: <b>2</b></p>
+            <button class="btn">Я в деле</button>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 6. Афиша событий -->
+    <section class="screen" id="events">
+        <h1>События</h1>
+        <div class="event"><b>Турнир 3×3 по баскетболу</b><span>Пятница, 15:00 · спортзал</span></div>
+        <div class="event"><b>Посадка деревьев</b><span>Суббота, 11:00 · школьный двор</span></div>
+        <div class="event"><b>Клуб настольных игр</b><span>Среда, 16:00 · каб. 204</span></div>
+    </section>
+
+    <!-- Меню внизу экрана -->
+    <nav class="menu">
+        <a href="#chat">Чат</a>
+        <a href="#clubs">Кружки</a>
+        <a href="#ideas">Идеи</a>
+        <a href="#events">События</a>
+    </nav>
+
+</div>
+</body>
+</html>
