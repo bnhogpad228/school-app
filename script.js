@@ -1119,6 +1119,32 @@ function drawMyClub(i) {
     return drawClub("myclub" + i, state.myClubs[i], currentNick);
 }
 
+// Значки для своих кружков — линиями, в том же стиле, что и значки в сетке (как на макете).
+// Ключ — эмодзи: он остаётся в заголовке чата и в старых сохранённых кружках
+const ICON_SVG = {
+    "🎨": "<path d=\"M12 3a9 9 0 1 0 0 18c1.1 0 1.7-1 1.2-1.9-.5-1 .2-2.1 1.3-2.1H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1.2\" fill=\"currentColor\"/><circle cx=\"10.5\" cy=\"7\" r=\"1.2\" fill=\"currentColor\"/><circle cx=\"15.2\" cy=\"7.6\" r=\"1.2\" fill=\"currentColor\"/>",
+    "⚽": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.6l3.2 2.3-1.2 3.8h-4l-1.2-3.8z\"/><path d=\"M12 8.6V3.3\"/><path d=\"M15.2 10.9l4.8-1.6\"/><path d=\"M14 14.7l3 4.2\"/><path d=\"M10 14.7l-3 4.2\"/><path d=\"M8.8 10.9L4 9.3\"/>",
+    "🎮": "<path d=\"M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.3 1.9L14 13h-4l-1.7 1.9A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4z\"/><path d=\"M7.5 10v3.4\"/><path d=\"M5.8 11.7h3.4\"/><circle cx=\"15.5\" cy=\"10.8\" r=\"1\" fill=\"currentColor\"/><circle cx=\"17.6\" cy=\"12.8\" r=\"1\" fill=\"currentColor\"/>",
+    "🎭": "<path d=\"M5 4h14v7a7 7 0 0 1-14 0z\"/><path d=\"M8.5 9h2\"/><path d=\"M13.5 9h2\"/><path d=\"M9 13.5c1.7 1.6 4.3 1.6 6 0\"/>",
+    "♟️": "<circle cx=\"12\" cy=\"6\" r=\"2.6\"/><path d=\"M9.6 10.5h4.8l-1 6.2h-2.8z\"/><path d=\"M8 16.7h8l1 3.3H7z\"/>",
+    "🧪": "<path d=\"M9 3h6\"/><path d=\"M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3\"/><path d=\"M7.6 15h8.8\"/>",
+    "🎤": "<rect x=\"9\" y=\"3\" width=\"6\" height=\"11\" rx=\"3\"/><path d=\"M6 11a6 6 0 0 0 12 0\"/><path d=\"M12 17v4\"/><path d=\"M9 21h6\"/>",
+    "🎬": "<rect x=\"3\" y=\"9\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M3.5 9l1.6-4.5h13.8L20.5 9\"/><path d=\"M9 4.5L7.5 9\"/><path d=\"M14 4.5L12.5 9\"/>",
+    "🌍": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18\"/><path d=\"M12 3c3 3.2 3 14.8 0 18\"/><path d=\"M12 3c-3 3.2-3 14.8 0 18\"/>",
+    "🐾": "<path d=\"M12 20.5c-3 0-5-1.6-5-3.6 0-2.1 2.3-4.6 5-4.6s5 2.5 5 4.6c0 2-2 3.6-5 3.6z\"/><circle cx=\"6\" cy=\"10.5\" r=\"1.7\"/><circle cx=\"9.5\" cy=\"6.3\" r=\"1.7\"/><circle cx=\"14.5\" cy=\"6.3\" r=\"1.7\"/><circle cx=\"18\" cy=\"10.5\" r=\"1.7\"/>"
+};
+
+function iconSvg(emoji) {
+    return '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + ICON_SVG[emoji] + '</svg>';
+}
+
+// В форме «Создать кружок» вместо эмодзи показываем такие же линейные значки
+for (let input of document.querySelectorAll('input[name="club-icon"]')) {
+    if (ICON_SVG[input.value]) {
+        input.nextElementSibling.innerHTML = iconSvg(input.value);
+    }
+}
+
 // Нарисовать созданный учеником кружок. owner — кто создал
 function drawClub(id, club, owner) {
     CLUBS[id] = {name: club.name, icon: club.icon, messages: [], owner: owner};
@@ -1129,7 +1155,11 @@ function drawClub(id, club, owner) {
     link.onclick = function () { openClub(id); };
     let circle = document.createElement("span");
     circle.className = "circle c-new";
-    circle.textContent = club.icon;
+    if (ICON_SVG[club.icon]) {
+        circle.innerHTML = iconSvg(club.icon);    // наш значок (строка из кода — безопасно)
+    } else {
+        circle.textContent = club.icon;           // старый кружок с другим значком
+    }
     let title = document.createElement("span");
     title.textContent = club.name;         // textContent — безопасно
     link.append(circle, title);
