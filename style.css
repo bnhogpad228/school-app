@@ -292,17 +292,32 @@ body:has(#dm:target) { background: var(--chat-bg); }
 .actions .ask { font-size: 12px; font-weight: bold; margin-right: 6px; color: var(--chat-text); }
 
 /* =====================================================================
-   ЭКРАНЫ ВХОДА И РЕГИСТРАЦИИ — по макету дизайнера (тёмный вариант)
-   Пока светлого макета нет, вход всегда в тёмных цветах.
+   ЭКРАНЫ ВХОДА И РЕГИСТРАЦИИ — по макетам дизайнера (светлый и тёмный)
+   Тема входа = последняя тема, выбранная на этом телефоне (см. script.js)
    ===================================================================== */
 :root {
+    --login-bg: #dff6fb;          /* очень светлый голубой фон */
+    --login-field: #7fdfbf;       /* мятные поля */
+    --login-field-text: #10302a;  /* текст в поле */
+    --login-placeholder: #2d6f5c; /* подсказка — тёмно-мятная */
+    --login-button: #f3c99c;      /* персиковая кнопка «Войти» */
+    --login-button-text: #1d1d1d; /* чёрный текст на кнопке */
+    --login-link: #a8401c;        /* ссылка — терракота (персиковая на светлом фоне не читается) */
+    --login-text: #1d1d1d;        /* подписи — чёрные */
+    --login-muted: #3f5a60;
+    --login-error: #b3261e;
+}
+body.dark {
     --login-bg: #173f4b;          /* тёмный сине-зелёный фон */
     --login-field: #6cbac6;       /* светло-бирюзовые поля */
-    --login-field-text: #0f2a33;  /* текст в поле — тёмный, хорошо читается */
-    --login-placeholder: #2a5f69; /* подсказка в поле — темнее, чем на макете, чтобы читалась */
+    --login-field-text: #0f2a33;
+    --login-placeholder: #2a5f69;
     --login-button: #2f8f6c;      /* зелёная кнопка «Войти» */
-    --login-link: #5fd0a8;        /* ссылка «Зарегистрироваться» */
+    --login-button-text: #ffffff;
+    --login-link: #5fd0a8;
     --login-text: #ffffff;
+    --login-muted: #c9e6eb;
+    --login-error: #ffb4a8;
 }
 
 /* Фон всей страницы, когда открыт вход (в том числе при первом открытии без #) */
@@ -316,7 +331,7 @@ body:has(#register:target) { background: var(--login-bg); }
     font-size: 34px;
     margin-bottom: 8px;
 }
-#login .muted, #register .muted, #login .hint, #register .hint { color: #c9e6eb; }
+#login .muted, #register .muted, #login .hint, #register .hint { color: var(--login-muted); }
 #login label, #register label { color: var(--login-text); font-size: 18px; }
 
 #login input, #register input, #register select {
@@ -330,6 +345,7 @@ body:has(#register:target) { background: var(--login-bg); }
 
 #login .btn, #register .btn {
     background: var(--login-button);
+    color: var(--login-button-text);
     font-size: 20px;
     font-weight: 700;
     padding: 16px;
@@ -341,7 +357,7 @@ body:has(#register:target) { background: var(--login-bg); }
     text-decoration: underline;
     text-underline-offset: 4px;
 }
-#login .error, #register .error { color: #ffb4a8; }   /* ошибка — светло-красная, видна на тёмном */
+#login .error, #register .error { color: var(--login-error); }
 
 /* ===== Формы «Предложить инициативу» и «Сообщить о событии» ===== */
 .new-form { margin-bottom: 16px; }

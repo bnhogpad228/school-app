@@ -748,6 +748,10 @@ function applySettings() {
     // classList.toggle("dark", true) добавляет класс, с false — убирает
     document.body.classList.toggle("dark", state.settings.dark);
     document.body.classList.toggle("big", state.settings.big);
+    // Запоминаем тему на телефоне — чтобы экран входа после выхода был в той же теме
+    try {
+        localStorage.setItem("schoolAppTheme", state.settings.dark ? "dark" : "light");
+    } catch (e) {}
     // Галочки на экране настроек ставим так, как сохранено
     document.getElementById("set-dark").checked = state.settings.dark;
     document.getElementById("set-big").checked = state.settings.big;
@@ -835,6 +839,17 @@ function restoreScreen() {
     if (state.blocked) {
         showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
     }
+}
+
+// =====================================================================
+// Тема экрана входа (пока никто не вошёл): последняя выбранная на этом телефоне,
+// а если её нет — как в настройках самого телефона
+// =====================================================================
+if (!currentNick) {
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem("schoolAppTheme"); } catch (e) {}
+    let phoneDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.body.classList.toggle("dark", savedTheme === "dark" || (savedTheme === null && phoneDark));
 }
 
 // =====================================================================
