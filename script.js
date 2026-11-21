@@ -365,7 +365,7 @@ function askDelete(button) {
     actions.innerHTML = '<span class="ask">Удалить сообщение?</span>' +
         '<button onclick="deleteMessage(this, true)">У всех</button>' +
         '<button onclick="deleteMessage(this, false)">У себя</button>' +
-        '<button onclick="cancelAction(this)">Отмена</button>';
+        '<button class="cancel" onclick="cancelAction(this)">Отмена</button>';
 }
 
 // forAll = true — удалить у всех, false — только у себя

@@ -385,3 +385,4 @@ body:has(#register:target) { background: var(--login-bg); }
 /* Кнопки «Разрешить / Отклонить» переносятся на маленьких экранах */
 .dm-row { flex-wrap: wrap; }
 .event .mine-tag { display: inline; color: var(--main); margin-left: 6px; }
+.actions button.cancel { display: block; margin-top: 4px; }   /* «Отмена» — отдельной строкой под вариантами удаления */
