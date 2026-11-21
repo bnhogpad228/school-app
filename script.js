@@ -6,7 +6,7 @@
 // =====================================================================
 const SCHOOL_CODE = "1234";   // код школы — один для всех учеников (в настоящей версии проверял бы сервер)
 const TEACHER_CODE = "5678";  // код учителя — выдаёт администрация, чтобы ученик не зарегистрировался учителем
-const ROLE_NAMES = {student: "Ученик", teacher: "Учитель", parent: "Родитель"};
+const ROLE_NAMES = {student: "Ученик", teacher: "Учитель"};
 
 let users = {};          // все профили на этом телефоне
 let currentNick = "";    // кто сейчас вошёл (пусто — никто)
@@ -40,7 +40,7 @@ function loadUsers() {
     } catch (e) {}
 }
 
-// Роль пользователя: student — ученик, teacher — учитель, parent — родитель.
+// Роль пользователя: student — ученик, teacher — учитель.
 // У старых профилей роли нет — это ученики
 function roleOf(nick) {
     return (users[nick] && users[nick].role) || "student";
@@ -131,14 +131,6 @@ function register() {
             return;
         }
     }
-    if (role === "parent") {
-        let child = document.getElementById("reg-child").value.trim();
-        if (!users[child] || roleOf(child) !== "student") {
-            error.textContent = "Ученик с таким ником не найден";
-            return;
-        }
-        user.child = child;                // родитель видит только группы своего ребёнка
-    }
     if (password.length < 4) {
         error.textContent = "Пароль — не меньше 4 символов";
         return;
@@ -165,7 +157,7 @@ function isDemoNick(nick) {
     return nick.toLowerCase() === "скрипка_7в";
 }
 
-// Переключили «Ученик / Учитель / Родитель» — меняем поля формы
+// Переключили «Ученик / Учитель» — меняем поля формы
 function changeRole() {
     let role = document.querySelector('input[name="role"]:checked').value;
     for (let el of document.querySelectorAll("#register [data-reg]")) {
@@ -176,9 +168,7 @@ function changeRole() {
                   "Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события."],
         teacher: ["Код учителя", "Его выдаёт администрация школы", "Как к вам обращаться (без фамилии)", "Например, Анна Сергеевна",
                   "Классное руководство (если есть)",
-                  "Видите чаты своих кружков, разбираете жалобы (и из чата своего класса), делаете объявления для класса, пишете лично своим ученикам и их родителям."],
-        parent:  ["Код школы", "Его выдаёт классный руководитель", "Ваш ник", "Например, Мама_Енота", "",
-                  "Видите, в каких кружках ваш ребёнок, объявления его класса и пишете лично ребёнку и его учителям. Переписку ребёнка вы не видите."]
+                  "Видите чаты своих кружков, разбираете жалобы (и из чата своего класса), делаете объявления для класса, пишете лично своим ученикам."]
     }[role];
     document.getElementById("reg-code-label").textContent = texts[0];
     document.getElementById("reg-code").placeholder = texts[1];
@@ -202,7 +192,7 @@ function login() {
         error.textContent = "Неверный ник или пароль";
         return;
     }
-    // Учитель входит по коду учителя, ученики и родители — по коду школы
+    // Учитель входит по коду учителя, ученики — по коду школы
     if (code !== (roleOf(nick) === "teacher" ? TEACHER_CODE : SCHOOL_CODE)) {
         error.textContent = roleOf(nick) === "teacher" ? "Неверный код учителя" : "Неверный код школы";
         return;
@@ -337,36 +327,22 @@ const CLUB_EXTRA = {
 // Пример жалобы для показа учителю: на это сообщение уже пожаловались двое
 const DEMO_REPORTS = {"basketball-3": 2};
 
-// Какой класс у чата класса: у ученика и учителя — свой, у родителя — класс ребёнка
+// Какой класс у чата класса: у ученика — свой, у учителя — класс, где он классный руководитель
 function classGrade() {
-    let u = users[currentNick];
-    if (myRole() === "parent") {
-        return users[u.child] ? users[u.child].grade : "";
-    }
-    return u.grade || "";
+    return users[currentNick].grade || "";
 }
 
-// Какие кружки видны: ученику — все, учителю — свои и свой класс, родителю — группы ребёнка
+// Какие кружки видны: ученику — все, учителю — только те, что он ведёт
 function allowedClubs() {
     let u = users[currentNick];
     if (myRole() === "teacher") {
         return (u.clubs || []).slice();                 // slice() — копия; в чат своего класса учитель не заходит
     }
-    if (myRole() === "parent") {
-        let child = users[u.child];
-        if (!child) {
-            return [];
-        }
-        let list = ["class"];
-        for (let id of child.state.joinedClubs || []) { list.push(id); }
-        for (let i = 0; i < (child.state.myClubs || []).length; i++) { list.push("myclub" + i); }
-        return list;
-    }
     return null;                           // null — ученику видны все кружки
 }
 
 // Можно ли открыть чат: ученик — любой (писать — после «Вступить»),
-// учитель — только чаты своих кружков, родитель — никакие (видит только, куда вступил ребёнок)
+// учитель — только чаты своих кружков
 function canOpenChat(id) {
     if (myRole() === "teacher") {
         return (users[currentNick].clubs || []).includes(id);
@@ -386,7 +362,7 @@ function reportClubs() {
 
 // =====================================================================
 // ОБЪЯВЛЕНИЯ КЛАССА: классный руководитель пишет всему классу,
-// видят ученики класса и их родители. Хранятся отдельно — они общие
+// видят ученики класса. Хранятся отдельно — они общие
 // =====================================================================
 function loadAnnouncements() {
     try {
@@ -421,7 +397,7 @@ function addAnnouncement() {
 }
 
 function deleteAnnouncement(time) {
-    askConfirm("Удалить объявление?", "Ученики и родители больше его не увидят.", "Удалить", function () {
+    askConfirm("Удалить объявление?", "Ученики больше его не увидят.", "Удалить", function () {
         removeAnnouncement(time);
     });
 }
@@ -516,7 +492,7 @@ function renderChat() {
             continue;                      // в чате класса — только ученики этого класса
         }
         if (currentClub.startsWith("myclub") && nick !== CLUBS[currentClub].owner) {
-            continue;                      // свои кружки пока видит только создатель (и его родитель)
+            continue;                      // свои кружки пока видит только создатель
         }
         let list = users[nick].state.myMessages || [];
         for (let i = 0; i < list.length; i++) {
@@ -635,9 +611,7 @@ function updateClubBar() {
         joinButton.hidden = true;
         send.hidden = true;
         readonly.hidden = false;
-        readonly.textContent = myRole() === "teacher"
-            ? "Вы видите чат своего кружка и можете скрыть сообщение, нарушающее правила. Писать в чатах могут только ученики."
-            : "Вы читаете группу ребёнка. Писать в чатах нельзя, личные сообщения ребёнка вам не видны.";
+        readonly.textContent = "Вы видите чат своего кружка и можете скрыть сообщение, нарушающее правила. Писать в чатах могут только ученики.";
     }
 }
 
@@ -801,8 +775,6 @@ function addMessageToChat(id, nick, text, container = "messages", canWritePrivat
     } else if (myRole() === "teacher") {
         // Учитель может скрыть сообщение у всех (модерация)
         message.innerHTML = '<b></b><p></p><div class="actions"><button onclick="teacherHide(this)">Скрыть у всех</button></div>';
-    } else if (myRole() === "parent") {
-        message.innerHTML = '<b></b><p></p>';   // родитель только читает
     } else {
         message.innerHTML = '<b></b><p></p>' +
             '<div class="actions"><button onclick="hideMessage(this)">Скрыть</button>' +
@@ -1400,12 +1372,11 @@ function openDm(nick) {
 // =====================================================================
 // ЛИЧНЫЕ ЧАТЫ С УЧИТЕЛЯМИ И РОДИТЕЛЯМИ
 // Кто кому может писать:
-//   ученик  — своим родителям и своим учителям (классный руководитель, учителя его кружков);
-//   родитель — своему ребёнку и учителям ребёнка; чужим детям — никогда;
-//   учитель — ученикам своего класса и кружков и их родителям.
+//   ученик  — своим учителям (классный руководитель, учителя его кружков);
+//   учитель — ученикам своего класса и своих кружков.
 // Эти чаты общие для двоих, поэтому хранятся отдельно от профилей (в настоящей версии — на сервере)
 // =====================================================================
-let currentDirect = "";      // с кем открыт чат «учитель / родитель»
+let currentDirect = "";      // с кем открыт чат «ученик — учитель»
 
 function directKey(a, b) {
     return [a, b].sort().join("|");        // одинаковый ключ для пары, кто бы ни писал первым
@@ -1449,24 +1420,12 @@ function directContacts() {
         }
     };
     if (myRole() === "student") {
-        for (let n in users) {
-            if (roleOf(n) === "parent" && users[n].child === currentNick) { add(n, "родитель"); }
-        }
         for (let t of teachersOf(currentNick)) { add(t, "учитель"); }
-    }
-    if (myRole() === "parent") {
-        add(me.child, "ваш ребёнок");
-        if (users[me.child]) {
-            for (let t of teachersOf(me.child)) { add(t, "учитель ребёнка"); }
-        }
     }
     if (myRole() === "teacher") {
         for (let n in users) {
             if (roleOf(n) === "student" && teachersOf(n).includes(currentNick)) {
                 add(n, "ученик · " + users[n].grade);
-                for (let p in users) {
-                    if (roleOf(p) === "parent" && users[p].child === n) { add(p, "родитель " + n); }
-                }
             }
         }
     }
@@ -1479,9 +1438,8 @@ function renderDirect() {
     let contacts = directContacts();
     let all = loadDirect();
     let hints = {
-        student: "Пиши своим учителям и родителям. Родитель появится здесь, когда зарегистрируется и укажет твой ник.",
-        teacher: "Ученики вашего класса и кружков и их родители.",
-        parent: "Ваш ребёнок и его учителя. Другим детям родитель писать не может."
+        student: "Твой классный руководитель и учителя кружков, в которые ты вступил.",
+        teacher: "Ученики вашего класса и ваших кружков."
     };
     document.getElementById("direct-hint").textContent = hints[myRole()];
     if (contacts.length === 0) {
@@ -1512,7 +1470,7 @@ function openDirect(nick) {
     currentDm = "";
     currentDirect = nick;
     document.getElementById("dm-title").textContent = "✉️ " + nick;
-    document.getElementById("dm-block").hidden = true;      // чат с учителем или родителем не блокируется
+    document.getElementById("dm-block").hidden = true;      // чат с учителем не блокируется
     let box = document.getElementById("dm-messages");
     box.innerHTML = "";
     for (let m of loadDirect()[directKey(currentNick, nick)] || []) {
@@ -1553,7 +1511,7 @@ function sendDirect(text) {
 function sendDm() {
     let input = document.getElementById("dm-input");
     let text = input.value.trim();
-    if (currentDirect !== "") {            // чат с учителем или родителем
+    if (currentDirect !== "") {            // чат ученика с учителем
         if (text !== "" && sendDirect(text)) {
             input.value = "";
         }
@@ -1644,22 +1602,20 @@ function showProfile() {
         for (let id of u.clubs || []) { names.push(CLUBS[id].name); }
         extra = "Кружки: " + (names.length ? names.join(", ") : "—");   // join — как ", ".join() в Python
     }
-    if (myRole() === "parent") {
-        extra = "Ребёнок: " + u.child;
-    }
     document.getElementById("profile-extra").textContent = extra;
 }
 
 // Показать нужное для роли: меню, формы, кнопки
 function applyRole() {
     let role = myRole();
-    document.body.classList.remove("role-student", "role-teacher", "role-parent");
+    document.body.classList.remove("role-student", "role-teacher");
     document.body.classList.add("role-" + role);
     for (let el of document.querySelectorAll("[data-roles]")) {
         el.hidden = !el.dataset.roles.split(" ").includes(role);
     }
-    let titles = {student: "Кружки по интересам", teacher: "Мои кружки", parent: "Группы ребёнка"};
-    document.getElementById("clubs-title").textContent = titles[role] + (role === "parent" ? ": " + users[currentNick].child : "");
+    let titles = {student: "Кружки по интересам", teacher: "Мои кружки"};
+    document.getElementById("clubs-title").textContent = titles[role];
+    document.getElementById("direct-title").textContent = role === "teacher" ? "Мои ученики" : "Мои учителя";
 }
 
 // Скрыть в сетке кружки, которые роли не видны
@@ -1670,24 +1626,7 @@ function applyClubFilter() {
     }
 }
 
-// Родителю — отметки, где участвует ребёнок
-function markChildActivity() {
-    let child = users[users[currentNick].child];
-    if (!child) {
-        return;
-    }
-    for (let id of child.state.joined || []) {
-        let el = document.getElementById(id);
-        if (el) {
-            let tag = document.createElement("p");
-            tag.className = "mine-tag";
-            tag.textContent = el.classList.contains("event") ? "Ваш ребёнок идёт" : "Ваш ребёнок в команде";
-            el.append(tag);
-        }
-    }
-}
-
-// «Принимаю» на правилах: ученик идёт в чат класса, учитель и родитель — к кружкам
+// «Принимаю» на правилах: ученик идёт в чат класса, учитель — к своим кружкам
 function acceptRules() {
     if (myRole() === "student") {
         openClub("class");
@@ -1733,7 +1672,7 @@ window.addEventListener("hashchange", function () {
     } else if (currentNick !== "" && location.hash === "#reports" && myRole() !== "teacher") {
         location.hash = "clubs";
     } else if (currentNick !== "" && location.hash === "#chat" && !canOpenChat(currentClub)) {
-        location.hash = "clubs";           // учителю — только чаты его кружков, родителю — никакие
+        location.hash = "clubs";           // учителю — только чаты его кружков
     } else if (location.hash === "#dm" && currentDm === "" && currentDirect === "") {
         location.hash = "private";         // личный чат открывается только из списка
     }
@@ -1742,7 +1681,7 @@ window.addEventListener("hashchange", function () {
         renderAnnouncements();
     }
     if (location.hash === "#private" && currentNick !== "") {
-        renderDirect();                    // список учителей и родителей мог измениться
+        renderDirect();                    // список учителей и учеников мог измениться
     }
     if (location.hash === "#reports" && currentNick !== "" && myRole() === "teacher") {
         document.getElementById("reports-done").textContent = "";
@@ -1768,12 +1707,6 @@ function restoreScreen() {
     for (let i = 0; i < state.myIdeas.length; i++) { drawMyIdea(i); }
     for (let i = 0; i < state.myEvents.length; i++) { drawMyEvent(i); }
     for (let i = 0; i < state.myClubs.length; i++) { drawMyClub(i); }
-    if (myRole() === "parent" && users[users[currentNick].child]) {
-        let child = users[currentNick].child;                    // кружки, которые создал ребёнок
-        let childClubs = users[child].state.myClubs || [];
-        for (let i = 0; i < childClubs.length; i++) { drawClub("myclub" + i, childClubs[i], child); }
-        markChildActivity();
-    }
     applyClubFilter();
     renderAnnouncements();
     document.getElementById("clubs-empty").hidden = !(myRole() === "teacher" && allowedClubs().length === 0);

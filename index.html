@@ -36,7 +36,7 @@
                 <circle class="atom-n" cx="94.0" cy="6.0" r="3.4"/>
             </svg>
         </div>
-        <p class="muted">Приложение для учеников, учителей и родителей нашей школы. Код школы один для всех — так посторонние не войдут.</p>
+        <p class="muted">Приложение для учеников и учителей нашей школы. Код школы один для всех — так посторонние не войдут.</p>
         <label>Код школы <span class="label-note">(учителям — код учителя)</span>
             <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
@@ -59,7 +59,6 @@
         <div class="role-pick">
             <label><input type="radio" name="role" value="student" checked onchange="changeRole()"><span><i>🎒</i>Ученик</span></label>
             <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span><i>📚</i>Учитель</span></label>
-            <label><input type="radio" name="role" value="parent" onchange="changeRole()"><span><i>👨‍👩‍👧</i>Родитель</span></label>
         </div>
         <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
         <label><span id="reg-code-label">Код школы</span>
@@ -67,9 +66,6 @@
         </label>
         <label><span id="reg-nick-label">Ник (не фамилия!)</span>
             <input type="text" id="reg-nick" placeholder="Например, Енот_7Б" autocomplete="off">
-        </label>
-        <label data-reg="parent" hidden>Ник ребёнка в приложении
-            <input type="text" id="reg-child" placeholder="Например, Енот_7Б" autocomplete="off">
         </label>
         <label data-reg="student teacher" id="reg-grade-label">Класс</label>
         <div class="row" data-reg="student teacher">
@@ -131,7 +127,7 @@
         <!-- Сообщения рисует script.js — у каждого кружка свои -->
         <div id="messages"></div>
         <p class="error" id="chat-warning"></p>
-        <p class="readonly-note" data-roles="teacher parent" hidden id="chat-readonly"></p>
+        <p class="readonly-note" data-roles="teacher" hidden id="chat-readonly"></p>
         <div class="send" data-roles="student">
             <input type="text" id="new-message" placeholder="Сообщение...">
             <button class="btn small" onclick="sendMessage()">Отправить</button>
@@ -141,7 +137,6 @@
     <!-- ЭКРАН 4. Кружки по интересам -->
     <section class="screen" id="clubs">
         <h1 id="clubs-title">Кружки и классы</h1>
-        <p class="hint" data-roles="parent" hidden>Здесь видно, в каких кружках ваш ребёнок. Переписку в чатах родители не видят — так договорились ради доверия и безопасности детей.</p>
         <p class="hint" id="clubs-empty" hidden>Вы не ведёте кружков. Объявления для класса — в «Событиях», жалобы из чата класса — в «Жалобах».</p>
         <details class="new-form" data-roles="student">
             <summary class="btn second">+ Создать кружок</summary>
@@ -273,7 +268,7 @@
         <div class="card">
             <h2>Общение</h2>
             <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
-            <p data-roles="teacher parent" hidden>Чужие личные сообщения и переписку в чатах класса не видят ни учителя, ни родители. Учитель пишет лично ученикам своего класса и кружков и их родителям, родитель — своему ребёнку и его учителям.</p>
+            <p data-roles="teacher" hidden>Личные сообщения учеников между собой и чат класса учитель не видит. Писать лично можно ученикам своего класса и своих кружков.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
@@ -284,7 +279,7 @@
     <!-- ЭКРАН 8. Личные сообщения: запросы и чаты. Каждый чат разрешается отдельно -->
     <section class="screen" id="private">
         <h1>Личные сообщения</h1>
-        <h2>Учителя и родители</h2>
+        <h2 id="direct-title">Мои учителя</h2>
         <p class="hint" id="direct-hint"></p>
         <div id="dm-direct"></div>
         <div data-roles="student">

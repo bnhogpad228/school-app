@@ -525,7 +525,7 @@ body:not(.dark) .molecule .atom-o { fill: #e0904a; }
     font-size: 14px;
 }
 
-/* ===== Учитель и родитель: без кнопок «Я в деле» и «Пойду» ===== */
+/* ===== Учитель: без кнопок «Я в деле» и «Пойду» ===== */
 body:not(.role-student) #ideas .card .btn,
 body:not(.role-student) #events .go { display: none; }
 
@@ -555,8 +555,6 @@ body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club
     margin-bottom: 12px;
     font-weight: 600;
 }
-/* Родитель видит кружки ребёнка, но не открывает чаты */
-body.role-parent #clubs-grid .club { pointer-events: none; }
 
 /* ===== Нижнее меню: круглые кнопки с подписью, листается вправо-влево ===== */
 .menu {
