@@ -616,3 +616,49 @@ body.dark .menu a.active i { background: #2e8a6a; border-color: #ffffff; }
 .role-pick span { padding: 0 4px; font-size: min(16px, 4.3vw); }
 .role-pick input:checked + span { border-color: var(--login-text); transform: scale(1.04); }
 #role-about { margin: 4px 0 18px; font-size: 14px; }
+
+/* =====================================================================
+   ПО МАКЕТАМ ДИЗАЙНЕРА: регистрация и «Кружки по интересам»
+   ===================================================================== */
+/* Регистрация: поля тоньше, подсказка по центру */
+#login input, #register input, #register select { padding: 10px 18px; }
+#register .hint.center { text-align: center; margin: 14px 0 0; }
+
+/* Кружки: фон как на входе (светло-голубой / тёмно-бирюзовый), рукописный заголовок */
+body:has(#clubs:target) { background: var(--login-bg); }
+#clubs { color: var(--login-text); }
+#clubs h1 {
+    font-family: "Comic Relief", "Montserrat", sans-serif;
+    font-size: 30px;
+    text-align: center;
+    margin: 12px 0 18px;
+}
+#clubs .hint { color: var(--login-muted); }
+#clubs .club { color: var(--login-text); font-size: 17px; font-weight: 600; }
+#clubs .grid { gap: 22px 12px; }
+/* Круги крупнее, значки — линиями, как нарисовала дизайнер */
+#clubs .circle {
+    width: 108px; height: 108px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 50px;
+    line-height: 1;
+}
+#clubs .circle .icon {
+    width: 58px; height: 58px;
+    fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round;
+    color: #ffffff;                        /* светлая тема: белые линии */
+}
+body.dark #clubs .circle .icon { color: #10232a; }   /* тёмная тема: тёмные линии */
+#clubs .new-form[open] { background: rgba(0, 0, 0, 0.12); }
+#clubs .new-form summary.btn { background: var(--login-button); color: var(--login-button-text); border: none; font-weight: 700; }
+#clubs .new-form[open] summary { width: calc(100% + 28px); margin: 0 -14px 10px; }
+#clubs .new-form label { color: var(--login-text); }
+#clubs .new-form input[type="text"] {
+    background: var(--login-field); color: var(--login-field-text);
+    border: none; border-radius: 999px; padding: 10px 18px;
+}
+#clubs .new-form input[type="text"]::placeholder { color: var(--login-placeholder); }
+#clubs .new-form .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
+#clubs .icon-pick span { background: var(--login-field); }

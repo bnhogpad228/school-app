@@ -93,13 +93,13 @@
                 <label><input type="checkbox" name="teach-club" value="eco"><span>🌱 Экология</span></label>
             </div>
         </div>
-        <label>Пароль (не меньше 4 символов)
-            <input type="password" id="reg-password" autocomplete="new-password">
+        <label>Пароль
+            <input type="password" id="reg-password" placeholder="Не меньше 4 символов" autocomplete="new-password">
         </label>
         <label>Повтори пароль
             <input type="password" id="reg-password2" autocomplete="new-password">
         </label>
-        <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
+        <p class="hint center">Мы не спрашиваем фамилию, телефон, геолокацию</p>
         <p class="error" id="register-error"></p>
         <button class="btn" onclick="register()">Зарегистрироваться</button>
         <p class="center">Уже есть аккаунт? <a href="#login">Войти</a></p>
@@ -164,13 +164,13 @@
             <button class="btn" onclick="addClub()">Создать</button>
         </details>
         <div class="grid" id="clubs-grid">
-            <a class="club" data-club="class" href="#chat" onclick="openClub('class')"><span class="circle c0">🏫</span><span id="class-label">Мой класс</span></a>
-            <a class="club" data-club="music" href="#chat" onclick="openClub('music')"><span class="circle c1">🎵</span>Музыка</a>
-            <a class="club" data-club="basketball" href="#chat" onclick="openClub('basketball')"><span class="circle c2">🏀</span>Баскетбол</a>
-            <a class="club" data-club="robots" href="#chat" onclick="openClub('robots')"><span class="circle c3">🤖</span>Роботы</a>
-            <a class="club" data-club="books" href="#chat" onclick="openClub('books')"><span class="circle c4">📚</span>Книги</a>
-            <a class="club" data-club="photo" href="#chat" onclick="openClub('photo')"><span class="circle c5">📷</span>Фото</a>
-            <a class="club" data-club="eco" href="#chat" onclick="openClub('eco')"><span class="circle c6">🌱</span>Экология</a>
+            <a class="club" data-club="class" href="#chat" onclick="openClub('class')"><span class="circle c0"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><circle cx="12" cy="10.5" r="1.6"/></svg></span><span id="class-label">Мой класс</span></a>
+            <a class="club" data-club="music" href="#chat" onclick="openClub('music')"><span class="circle c1"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/></svg></span>Музыка</a>
+            <a class="club" data-club="basketball" href="#chat" onclick="openClub('basketball')"><span class="circle c2"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3v18"/><path d="M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8"/><path d="M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/></svg></span>Баскетбол</a>
+            <a class="club" data-club="robots" href="#chat" onclick="openClub('robots')"><span class="circle c3"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="2.5"/><circle cx="9.5" cy="13" r="1.3" fill="currentColor"/><circle cx="14.5" cy="13" r="1.3" fill="currentColor"/><path d="M9.5 16.3h5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.3"/><path d="M3 12v3"/><path d="M21 12v3"/></svg></span>Роботы</a>
+            <a class="club" data-club="books" href="#chat" onclick="openClub('books')"><span class="circle c4"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0z"/><path d="M21 5.5c-3-1.5-6-1.5-9 0v14c3-1.5 6-1.5 9 0z"/><path d="M5.5 9.5c1.5-.5 3-.5 4.5 0"/><path d="M14 9.5c1.5-.5 3-.5 4.5 0"/></svg></span>Книги</a>
+            <a class="club" data-club="photo" href="#chat" onclick="openClub('photo')"><span class="circle c5"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.6"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg></span>Фото</a>
+            <a class="club" data-club="eco" href="#chat" onclick="openClub('eco')"><span class="circle c6"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 8 9 6 5 6c0 4 3 6 7 6z"/><path d="M12 10.5c0-3.5 2.5-5.5 6-5.5 0 3.5-2.5 5.5-6 5.5z"/></svg></span>Экология</a>
         </div>
     </section>
 
