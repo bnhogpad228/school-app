@@ -289,7 +289,7 @@ body:has(#dm:target) { background: var(--chat-bg); }
 /* ===== Свои сообщения: правка и удаление ===== */
 .edit-input { margin: 0; padding: 8px 10px; font-size: 15px; }
 .message .edited { font-size: 12px; opacity: 0.7; }
-.actions .ask { font-size: 12px; font-weight: bold; margin-right: 6px; color: var(--chat-text); }
+.actions .ask { display: block; margin-bottom: 4px; font-size: 12px; font-weight: bold; color: var(--chat-text); }  /* вопрос отдельной строкой, варианты — под ним */
 
 /* =====================================================================
    ЭКРАНЫ ВХОДА И РЕГИСТРАЦИИ — по макетам дизайнера (светлый и тёмный)
