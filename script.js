@@ -1161,7 +1161,9 @@ function drawClub(id, club, owner) {
     let title = document.createElement("span");
     title.textContent = club.name;         // textContent — безопасно
     link.append(circle, title);
-    document.getElementById("clubs-grid").append(link);
+    let grid = document.getElementById("clubs-grid");
+    grid.insertBefore(link, grid.querySelector(".create-tile"));   // новый кружок — перед кругом «Создать»
+    layoutClubGrid();
     return id;
 }
 
@@ -1666,8 +1668,32 @@ function applyRole() {
 function applyClubFilter() {
     let allowed = allowedClubs();
     for (let link of document.querySelectorAll("#clubs-grid .club")) {
-        link.hidden = allowed !== null && !allowed.includes(link.dataset.club);
+        if (link.classList.contains("create-tile")) {
+            link.hidden = myRole() !== "student";           // создавать кружки могут только ученики
+        } else {
+            link.hidden = allowed !== null && !allowed.includes(link.dataset.club);
+        }
     }
+    layoutClubGrid();
+}
+
+// Если кругов нечётное число — последний ставим по центру, чтобы не было пустой клетки
+function layoutClubGrid() {
+    let tiles = Array.from(document.querySelectorAll("#clubs-grid .club")).filter(function (t) { return !t.hidden; });
+    for (let t of tiles) {
+        t.classList.remove("wide");
+    }
+    if (tiles.length % 2 === 1) {
+        tiles[tiles.length - 1].classList.add("wide");
+    }
+}
+
+// Нажали круг «Создать кружок» — открываем форму над сеткой
+function openClubForm() {
+    let form = document.querySelector("#clubs .new-form");
+    form.open = true;
+    form.scrollIntoView({behavior: "smooth", block: "start"});
+    document.getElementById("club-name").focus();
 }
 
 // Родителю — отметки, где участвует ребёнок

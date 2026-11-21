@@ -663,3 +663,13 @@ body.dark #clubs .circle .icon { color: #10232a; }   /* тёмная тема: �
 #clubs .new-form .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
 #clubs .icon-pick span { background: var(--login-field); }
 #clubs .icon-pick input:checked + span { border-color: var(--login-text); }
+
+/* ===== Круг «Создать кружок» в сетке и форма, которая открывается по нему ===== */
+#clubs .new-form:not([open]) { display: none; }            /* форма спрятана, пока не нажали круг */
+#clubs .create-tile .circle {
+    background: transparent !important;
+    border: 3px dashed var(--login-text);
+    opacity: 0.85;
+}
+#clubs .create-tile .circle .icon { color: var(--login-text) !important; width: 46px; height: 46px; stroke-width: 2; }
+#clubs .grid .club.wide { grid-column: 1 / -1; }          /* последний нечётный круг — по центру */

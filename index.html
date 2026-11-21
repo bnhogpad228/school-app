@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 <div class="app">
@@ -144,7 +144,7 @@
         <p class="hint" data-roles="parent" hidden>Здесь видно, в каких кружках ваш ребёнок. Переписку в чатах родители не видят — так договорились ради доверия и безопасности детей.</p>
         <p class="hint" id="clubs-empty" hidden>Вы не ведёте кружков. Объявления для класса — в «Событиях», жалобы из чата класса — в «Жалобах».</p>
         <details class="new-form" data-roles="student">
-            <summary class="btn second">+ Создать кружок</summary>
+            <summary class="btn second">✕ Закрыть</summary>
             <label>Название
                 <input type="text" id="club-name" maxlength="30" placeholder="Например, Шахматы">
             </label>
@@ -172,6 +172,8 @@
             <a class="club" data-club="books" href="#chat" onclick="openClub('books')"><span class="circle c4"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0z"/><path d="M21 5.5c-3-1.5-6-1.5-9 0v14c3-1.5 6-1.5 9 0z"/><path d="M5.5 9.5c1.5-.5 3-.5 4.5 0"/><path d="M14 9.5c1.5-.5 3-.5 4.5 0"/></svg></span>Книги</a>
             <a class="club" data-club="photo" href="#chat" onclick="openClub('photo')"><span class="circle c5"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.6"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg></span>Фото</a>
             <a class="club" data-club="eco" href="#chat" onclick="openClub('eco')"><span class="circle c6"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 8 9 6 5 6c0 4 3 6 7 6z"/><path d="M12 10.5c0-3.5 2.5-5.5 6-5.5 0 3.5-2.5 5.5-6 5.5z"/></svg></span>Экология</a>
+            <!-- Последний круг — «Создать кружок»: заполняет сетку и открывает форму выше -->
+            <a class="club create-tile" data-roles="student" href="#clubs" onclick="openClubForm(); return false;"><span class="circle"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>Создать кружок</a>
         </div>
     </section>
 
@@ -354,6 +356,6 @@
     </nav>
 
 </div>
-<script src="script.js?v=10"></script>
+<script src="script.js?v=11"></script>
 </body>
 </html>
