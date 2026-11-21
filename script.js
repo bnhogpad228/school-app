@@ -1248,6 +1248,72 @@ function unblockDm(nick) {
     renderPrivate();
 }
 
+// =====================================================================
+// НЕПРОЧИТАННЫЕ: красный кружок с числом на вкладке «Сообщения»
+// Запоминаем, сколько чужих сообщений человек уже видел в каждом чате
+// =====================================================================
+function othersCount(messages) {
+    return messages.filter(function (m) { return m.from !== currentNick; }).length;   // filter — как генератор с if в Python
+}
+
+function unreadDm(nick) {
+    let dm = dmOf(nick);
+    if (!dm || dm.status !== "allowed") {
+        return 0;
+    }
+    return Math.max(0, othersCount(dm.messages) - ((state.dmSeen || {})[nick] || 0));
+}
+
+function unreadDirect(nick) {
+    let key = directKey(currentNick, nick);
+    let list = loadDirect()[key] || [];
+    return Math.max(0, othersCount(list) - ((state.directSeen || {})[key] || 0));
+}
+
+function markDmSeen(nick) {
+    if (!state.dmSeen) { state.dmSeen = {}; }
+    state.dmSeen[nick] = othersCount(dmOf(nick).messages);
+    saveState();
+    updateBadge();
+}
+
+function markDirectSeen(nick) {
+    let key = directKey(currentNick, nick);
+    if (!state.directSeen) { state.directSeen = {}; }
+    state.directSeen[key] = othersCount(loadDirect()[key] || []);
+    saveState();
+    updateBadge();
+}
+
+// Сколько всего нового: непрочитанные сообщения + запросы в личку
+function updateBadge() {
+    if (currentNick === "") {
+        return;
+    }
+    let total = 0;
+    for (let nick in state.dm) {
+        total += state.dm[nick].status === "incoming" ? 1 : unreadDm(nick);
+    }
+    for (let c of directContacts()) {
+        total += unreadDirect(c.nick);
+    }
+    let badge = document.getElementById("dm-badge");
+    badge.hidden = total === 0;
+    badge.textContent = total > 9 ? "9+" : String(total);
+}
+
+// Подсветить в меню открытую вкладку
+function markActiveTab() {
+    for (let link of document.querySelectorAll(".menu a")) {
+        let target = link.getAttribute("href");
+        let active = location.hash === target || (target === "#private" && location.hash === "#dm");
+        link.classList.toggle("active", active);
+        if (active) {
+            link.scrollIntoView({block: "nearest", inline: "nearest"});   // если кнопка за краем — подкручиваем ряд
+        }
+    }
+}
+
 // Нарисовать экран «Личные сообщения»
 function renderPrivate() {
     let incoming = document.getElementById("dm-incoming");
@@ -1273,6 +1339,12 @@ function renderPrivate() {
             buttons.innerHTML = "<span class='status'>ожидает согласия</span>";
             outgoing.append(row);
         } else if (dm.status === "allowed") {
+            if (unreadDm(nick) > 0) {
+                let mark = document.createElement("span");
+                mark.className = "unread";
+                mark.textContent = " · новых: " + unreadDm(nick);
+                row.querySelector("b").append(mark);
+            }
             buttons.append(makeButton("Открыть чат", "btn", function () { openDm(nick); }));
             chats.append(row);
         } else if (dm.status === "blocked") {
@@ -1286,6 +1358,7 @@ function renderPrivate() {
             box.innerHTML = "<p class='dm-empty'>Пока пусто</p>";
         }
     }
+    updateBadge();
 }
 
 // Создать кнопку с действием (так безопаснее, чем вставлять ник в onclick)
@@ -1320,6 +1393,7 @@ function openDm(nick) {
         }
     }
     document.getElementById("dm-warning").textContent = "";
+    markDmSeen(nick);                      // открыли чат — новые сообщения прочитаны
     location.hash = "dm";
 }
 
@@ -1419,7 +1493,13 @@ function renderDirect() {
         row.className = "dm-row";
         row.innerHTML = "<b></b><span class='buttons'></span>";
         let count = (all[directKey(currentNick, c.nick)] || []).length;
-        row.querySelector("b").textContent = c.nick + " · " + c.note + (count ? " (" + count + ")" : "");
+        row.querySelector("b").textContent = c.nick + " · " + c.note;
+        if (unreadDirect(c.nick) > 0) {
+            let mark = document.createElement("span");
+            mark.className = "unread";
+            mark.textContent = " · новых: " + unreadDirect(c.nick);
+            row.querySelector("b").append(mark);
+        }
         row.querySelector(".buttons").append(makeButton("Написать", "btn small", function () { openDirect(c.nick); }));
         box.append(row);
     }
@@ -1439,6 +1519,7 @@ function openDirect(nick) {
         drawDirectMessage(m);
     }
     document.getElementById("dm-warning").textContent = "";
+    markDirectSeen(nick);
     location.hash = "dm";
 }
 
@@ -1518,6 +1599,10 @@ function autoReply(nick, text) {
         saveState();
         if (location.hash === "#dm" && currentDm === nick) {
             addMessageToChat("dm-" + nick + "-" + (dm.messages.length - 1), nick, answer, "dm-messages", false);
+            markDmSeen(nick);              // человек сейчас в этом чате — ответ сразу прочитан
+        } else {
+            updateBadge();                 // вышел из чата — на «Сообщениях» появится красный кружок
+            renderPrivate();
         }
     }, 1500);
 }
@@ -1652,6 +1737,7 @@ window.addEventListener("hashchange", function () {
     } else if (location.hash === "#dm" && currentDm === "" && currentDirect === "") {
         location.hash = "private";         // личный чат открывается только из списка
     }
+    markActiveTab();
     if (location.hash === "#events" && currentNick !== "") {
         renderAnnouncements();
     }
@@ -1705,6 +1791,8 @@ function restoreScreen() {
     }
     renderPrivate();
     renderDirect();
+    updateBadge();
+    setTimeout(markActiveTab, 0);
 
     // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
     renderChat();
