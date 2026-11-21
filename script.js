@@ -1490,6 +1490,36 @@ function sendDm() {
     saveState();
     addMessageToChat("dm-" + currentDm + "-" + (dm.messages.length - 1), currentNick, text, "dm-messages", false);
     input.value = "";
+    autoReply(currentDm, text);
+}
+
+// В прототипе придуманный собеседник отвечает сам через пару секунд.
+// В настоящей версии отвечал бы живой ученик
+function autoReply(nick, text) {
+    let me = currentNick;
+    let low = text.toLowerCase();
+    let answer;
+    if (low.includes("привет") || low.includes("здравствуй") || low.includes("хай")) {
+        answer = "Привет! 👋 Как дела?";
+    } else if (low.includes("как дела") || low.includes("как ты")) {
+        answer = "Нормально, спасибо! А у тебя?";
+    } else if (text.includes("?")) {
+        answer = "Хороший вопрос 🤔 Давай обсудим после уроков?";
+    } else {
+        let answers = ["Ага, понял 👍", "Классно!", "Давай!", "Ок, договорились", "Ха-ха 😄", "А ты в каком кружке?"];
+        answer = answers[dmOf(nick).messages.length % answers.length];   // % — остаток от деления, как в Python
+    }
+    setTimeout(function () {
+        let dm = dmOf(nick);
+        if (currentNick !== me || !dm || dm.status !== "allowed") {
+            return;                        // вышли из профиля или заблокировали — не отвечаем
+        }
+        dm.messages.push({from: nick, text: answer});
+        saveState();
+        if (location.hash === "#dm" && currentDm === nick) {
+            addMessageToChat("dm-" + nick + "-" + (dm.messages.length - 1), nick, answer, "dm-messages", false);
+        }
+    }, 1500);
 }
 
 // =====================================================================
