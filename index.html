@@ -10,24 +10,55 @@
 <body>
 <div class="app">
 
-    <!-- ЭКРАН 1. Вход и регистрация: код школы + ник + PIN. Никаких фамилий и телефонов -->
+    <!-- ЭКРАН 1. Вход: код школы, ник и пароль -->
     <section class="screen" id="login">
         <h1>Школьный двор</h1>
-        <p class="muted">Приложение для учеников школы. Код школы один для всех учеников, его выдаёт классный руководитель — так посторонние не войдут.</p>
+        <p class="muted">Приложение для учеников нашей школы. Код школы один для всех учеников — так посторонние не войдут.</p>
         <label>Код школы
-            <input type="text" id="code" placeholder="Например, 1234" autocomplete="off">
+            <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
-        <label>Ник (не фамилия!)
+        <label>Ник
             <input type="text" id="nick" placeholder="Например, Котик_7Б" autocomplete="off">
         </label>
-        <label>PIN — 4 цифры
-            <input type="password" id="pin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+        <label>Пароль
+            <input type="password" id="password" autocomplete="off">
         </label>
-        <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
         <p class="error" id="login-error"></p>
         <button class="btn" onclick="login()">Войти</button>
-        <button class="btn second" onclick="register()">Зарегистрироваться</button>
-        <p class="hint">Код школы для проверки: 1234</p>
+        <p class="center">Нет аккаунта? <a href="#register">Зарегистрироваться</a></p>
+    </section>
+
+    <!-- ЭКРАН 1а. Регистрация: код школы, ник, класс, пароль два раза. Никаких фамилий и телефонов -->
+    <section class="screen" id="register">
+        <h1>Регистрация</h1>
+        <label>Код школы
+            <input type="text" id="reg-code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
+        </label>
+        <label>Ник (не фамилия!)
+            <input type="text" id="reg-nick" placeholder="Например, Котик_7Б" autocomplete="off">
+        </label>
+        <label>Класс</label>
+        <div class="row">
+            <select id="reg-grade">
+                <option value="">Номер</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+                <option>9</option><option>10</option><option>11</option>
+            </select>
+            <select id="reg-letter">
+                <option value="">Буква</option>
+                <option>А</option><option>Б</option><option>В</option><option>Г</option><option>Д</option>
+            </select>
+        </div>
+        <label>Пароль (не меньше 4 символов)
+            <input type="password" id="reg-password" autocomplete="new-password">
+        </label>
+        <label>Повтори пароль
+            <input type="password" id="reg-password2" autocomplete="new-password">
+        </label>
+        <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
+        <p class="error" id="register-error"></p>
+        <button class="btn" onclick="register()">Зарегистрироваться</button>
+        <p class="center">Уже есть аккаунт? <a href="#login">Войти</a></p>
     </section>
 
     <!-- ЭКРАН 2. Правила общения — первый экран после входа -->

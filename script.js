@@ -1,10 +1,10 @@
 // =====================================================================
 // ПОЛЬЗОВАТЕЛИ И ПАМЯТЬ НА ТЕЛЕФОНЕ (localStorage)
 // На одном телефоне может быть несколько профилей. Все они лежат в users —
-// это как словарь в Python: { "Котик_7Б": {pin: "1111", state: {...}}, ... }.
+// это как словарь в Python: { "Котик_7Б": {password: "...", grade: "7Б", state: {...}}, ... }.
 // Данные хранятся только в браузере этого телефона, на сервер ничего не уходит.
 // =====================================================================
-const SCHOOL_CODE = "1234";   // код школы — один для всех учеников
+const SCHOOL_CODE = "1234";   // код школы — один для всех учеников (в настоящей версии проверял бы сервер)
 
 let users = {};          // все профили на этом телефоне
 let currentNick = "";    // кто сейчас вошёл (пусто — никто)
@@ -58,65 +58,71 @@ function startSession(nick) {
 }
 
 // =====================================================================
-// ВХОД И РЕГИСТРАЦИЯ
+// РЕГИСТРАЦИЯ: код школы, ник, класс, пароль и повтор пароля
 // =====================================================================
-// Считываем поля входа и проверяем то, что общее для входа и регистрации
-function readLoginForm() {
+function register() {
     // .value — то, что ввели в поле; .trim() убирает пробелы по краям (как strip() в Python)
-    let code = document.getElementById("code").value.trim();
-    let nick = document.getElementById("nick").value.trim();
-    let pin = document.getElementById("pin").value.trim();
+    let code = document.getElementById("reg-code").value.trim();
+    let nick = document.getElementById("reg-nick").value.trim();
+    let grade = document.getElementById("reg-grade").value;
+    let letter = document.getElementById("reg-letter").value;
+    let password = document.getElementById("reg-password").value;
+    let password2 = document.getElementById("reg-password2").value;
+    let error = document.getElementById("register-error");
 
-    if (code !== SCHOOL_CODE) {            // !== значит «строго не равно»
-        return "Неверный код школы";
+    if (code !== SCHOOL_CODE) {
+        error.textContent = "Неверный код школы";
+        return;
     }
     if (nick === "") {
-        return "Введи ник";
-    }
-    if (pin.length !== 4 || isNaN(pin)) {  // isNaN — «это не число»
-        return "PIN — ровно 4 цифры";
-    }
-    return {nick: nick, pin: pin};         // всё в порядке — возвращаем ник и PIN
-}
-
-function showLoginError(text) {
-    document.getElementById("login-error").textContent = text;
-}
-
-function register() {
-    let form = readLoginForm();
-    if (typeof form === "string") {        // вернулась строка — значит, это текст ошибки
-        showLoginError(form);
+        error.textContent = "Придумай ник";
         return;
     }
-    if (users[form.nick]) {
-        showLoginError("Такой ник уже занят на этом телефоне — придумай другой или войди");
+    if (users[nick]) {
+        error.textContent = "Такой ник уже занят — придумай другой";
         return;
     }
-    users[form.nick] = {pin: form.pin, state: emptyState()};   // создаём нового пользователя
-    currentNick = form.nick;
+    if (grade === "" || letter === "") {
+        error.textContent = "Выбери номер и букву класса";
+        return;
+    }
+    if (password.length < 4) {
+        error.textContent = "Пароль — не меньше 4 символов";
+        return;
+    }
+    if (password !== password2) {          // !== значит «строго не равно»
+        error.textContent = "Пароли не совпадают";
+        return;
+    }
+    // Создаём нового пользователя
+    users[nick] = {password: password, grade: grade + letter, state: emptyState()};
+    currentNick = nick;
     saveState();
-    startSession(form.nick);
+    startSession(nick);
 }
 
+// =====================================================================
+// ВХОД: код школы, ник и пароль
+// =====================================================================
 function login() {
-    let form = readLoginForm();
-    if (typeof form === "string") {
-        showLoginError(form);
+    let code = document.getElementById("code").value.trim();
+    let nick = document.getElementById("nick").value.trim();
+    let password = document.getElementById("password").value;
+    let error = document.getElementById("login-error");
+
+    if (code !== SCHOOL_CODE) {
+        error.textContent = "Неверный код школы";
         return;
     }
-    if (!users[form.nick]) {
-        showLoginError("Такого пользователя нет — нажми «Зарегистрироваться»");
+    if (!users[nick] || users[nick].password !== password) {
+        // Не говорим, что именно неверно — так сложнее подбирать чужие ники
+        error.textContent = "Неверный ник или пароль";
         return;
     }
-    if (users[form.nick].pin !== form.pin) {
-        showLoginError("Неверный PIN");
-        return;
-    }
-    startSession(form.nick);
+    startSession(nick);
 }
 
-// Выйти: профиль остаётся на телефоне, но войти можно только снова по PIN
+// Выйти: профиль остаётся на телефоне, но войти можно только снова по паролю
 function logout() {
     try {
         sessionStorage.removeItem("schoolAppCurrent");
@@ -176,6 +182,12 @@ function addMessageToChat(id, nick, text) {
 
     // Ник и текст вставляем через textContent — так чужой код в сообщении не выполнится
     message.querySelector("b").textContent = nick;
+    if (users[nick] && users[nick].grade) {
+        let grade = document.createElement("span");
+        grade.className = "grade";
+        grade.textContent = " · " + users[nick].grade;    // например «Ёжик · 7Б»
+        message.querySelector("b").after(grade);
+    }
     message.querySelector("p").textContent = text;
 
     // Ставим сообщение перед строкой предупреждений и полем ввода
@@ -270,7 +282,7 @@ if (currentNick !== "" && !users[currentNick]) {
 
 if (currentNick === "") {
     // Никто не вошёл — пускаем только на экран входа
-    if (location.hash !== "" && location.hash !== "#login") {
+    if (!isOpenScreen()) {
         location.hash = "login";
     }
 } else {
@@ -278,9 +290,14 @@ if (currentNick === "") {
     restoreScreen();
 }
 
+// Экраны, которые можно открыть без входа
+function isOpenScreen() {
+    return location.hash === "" || location.hash === "#login" || location.hash === "#register";
+}
+
 // Если кто-то без входа пытается перейти на другой экран по ссылке — возвращаем на вход
 window.addEventListener("hashchange", function () {
-    if (currentNick === "" && location.hash !== "" && location.hash !== "#login") {
+    if (currentNick === "" && !isOpenScreen()) {
         location.hash = "login";
     }
 });
