@@ -19,7 +19,22 @@
 
     <!-- ЭКРАН 1. Вход: код школы, ник и пароль -->
     <section class="screen" id="login">
-        <h1>Школьный двор</h1>
+        <div class="title-row">
+            <h1>Школьный двор</h1>
+            <!-- Молекула серотонина — как наш МАФ во дворе -->
+            <svg class="molecule" viewBox="0 0 100 79.0" role="img" aria-label="Молекула серотонина">
+                <g class="bonds">
+                    <polygon points="35.6,38.8 50.4,47.4 50.4,64.5 35.6,73.0 20.8,64.5 20.8,47.4"/>
+                    <polygon points="50.4,47.4 66.7,42.1 76.8,55.9 66.7,69.8 50.4,64.5"/>
+                    <polyline points="66.7,42.1 72.0,25.8 88.7,22.3 94.0,6.0"/>
+                    <polyline points="20.8,47.4 6.0,38.8"/>
+                </g>
+                <circle class="ring" cx="35.6" cy="55.9" r="9.4"/>
+                <circle class="atom-o" cx="6.0" cy="38.8" r="3.4"/>
+                <circle class="atom-n" cx="66.7" cy="69.8" r="3.4"/>
+                <circle class="atom-n" cx="94.0" cy="6.0" r="3.4"/>
+            </svg>
+        </div>
         <p class="muted">Приложение для учеников нашей школы. Код школы один для всех учеников — так посторонние не войдут.</p>
         <label>Код школы
             <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">

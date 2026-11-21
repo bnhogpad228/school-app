@@ -434,3 +434,16 @@ body:has(#register:target) { background: var(--login-bg); }
 .dialog-btn.danger { background: #b8442a; border-color: #b8442a; color: #ffffff; }
 .dialog-btn.plain { border-color: transparent; }
 .dialog-btn:active { transform: scale(0.96); opacity: 0.8; }
+
+/* ===== Молекула серотонина на экране входа ===== */
+/* Заголовок и молекула в одной строке — молекула занимает пустое место справа от названия */
+.title-row { display: flex; align-items: center; gap: 10px; }
+#login .title-row h1 { white-space: nowrap; font-size: min(34px, 7.6vw); }   /* название всегда в одну строку */
+.molecule { flex: 1 1 0; min-width: 48px; max-width: 96px; height: auto; }  /* молекула занимает остаток строки */
+.molecule .bonds { fill: none; stroke: var(--login-text); stroke-width: 3.2; stroke-linejoin: round; stroke-linecap: round; }
+.molecule .ring { fill: none; stroke: #2f9c7a; stroke-width: 2.6; }
+body.dark .molecule .ring { stroke: #7fdfbf; }
+.molecule .atom-o { fill: #f3c99c; stroke: var(--login-bg); stroke-width: 1.5; }
+.molecule .atom-n { fill: #7fdfbf; stroke: var(--login-bg); stroke-width: 1.5; }
+body:not(.dark) .molecule .atom-n { fill: #2f9c7a; }    /* на светлом фоне мятный бледный — делаем темнее */
+body:not(.dark) .molecule .atom-o { fill: #e0904a; }

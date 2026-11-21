@@ -20,7 +20,7 @@ function emptyState() {
         joined: [],        // id инициатив, где нажал «Я в деле»
         warnings: 0,       // сколько раз нарушил правила
         blocked: false,    // приостановлена ли отправка
-        settings: {dark: false, big: false},   // настройки
+        settings: {dark: true, big: false},    // настройки: по умолчанию тёмная тема
         dm: null           // личные чаты (null — ещё не создавались): { "Ник": {status: "...", messages: [...]} }
     };
 }
@@ -815,7 +815,7 @@ window.addEventListener("hashchange", function () {
 function restoreScreen() {
     // У старых профилей настроек ещё нет — добавляем по умолчанию
     if (!state.settings) {
-        state.settings = {dark: false, big: false};
+        state.settings = {dark: true, big: false};
     }
     // У старых профилей этих списков ещё нет
     if (!state.myIdeas) { state.myIdeas = []; }
@@ -853,13 +853,12 @@ function restoreScreen() {
 
 // =====================================================================
 // Тема экрана входа (пока никто не вошёл): последняя выбранная на этом телефоне,
-// а если её нет — как в настройках самого телефона
+// а если её ещё не выбирали — тёмная (основная тема приложения)
 // =====================================================================
 if (!currentNick) {
     let savedTheme = null;
     try { savedTheme = localStorage.getItem("schoolAppTheme"); } catch (e) {}
-    let phoneDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    document.body.classList.toggle("dark", savedTheme === "dark" || (savedTheme === null && phoneDark));
+    document.body.classList.toggle("dark", savedTheme !== "light");
 }
 
 // =====================================================================
