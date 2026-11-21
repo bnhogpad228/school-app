@@ -451,9 +451,15 @@ const RUDE_WORDS = ["дурак", "дура", "тупой", "тупая", "ид�
 function isRude(text) {
     // Маленькие буквы и ё → е, чтобы «ДУРАК» и «дурак» ловились одинаково
     let clean = text.toLowerCase().replaceAll("ё", "е");
-    for (let word of RUDE_WORDS) {         // как for word in RUDE_WORDS в Python
-        if (clean.includes(word)) {        // includes — как in для строк в Python
-            return true;
+    // Делим текст на слова: всё, что не буква, — разделитель (как split в Python)
+    let words = clean.split(/[^а-яa-z]+/);
+    for (let w of words) {
+        for (let rude of RUDE_WORDS) {
+            // Слово должно НАЧИНАТЬСЯ с грубого: «дураки» ловим,
+            // а «плохо» (внутри «лох») и «процедура» (внутри «дура») — нет
+            if (w.startsWith(rude)) {
+                return true;
+            }
         }
     }
     return false;
