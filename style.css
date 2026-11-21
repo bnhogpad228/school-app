@@ -126,3 +126,5 @@ input {
 .btn:disabled { background: #9a9a9a; cursor: default; }
 /* Кнопка выхода — спокойная, не главная */
 .btn.logout { background: none; color: var(--muted); border: 1px solid #ccc; margin-top: 24px; }
+/* Вторая кнопка на входе — «Зарегистрироваться» */
+.btn.second { background: var(--card); color: var(--main); border: 2px solid var(--main); }

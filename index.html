@@ -10,20 +10,24 @@
 <body>
 <div class="app">
 
-    <!-- ЭКРАН 1. Вход: код школы + ник. Никаких фамилий и телефонов -->
+    <!-- ЭКРАН 1. Вход и регистрация: код школы + ник + PIN. Никаких фамилий и телефонов -->
     <section class="screen" id="login">
         <h1>Школьный двор</h1>
-        <p class="muted">Приложение для учеников школы. Вход только по коду, который выдаёт классный руководитель.</p>
+        <p class="muted">Приложение для учеников школы. Код школы один для всех учеников, его выдаёт классный руководитель — так посторонние не войдут.</p>
         <label>Код школы
-            <input type="text" id="code" placeholder="Например, 1234">
+            <input type="text" id="code" placeholder="Например, 1234" autocomplete="off">
         </label>
         <label>Ник (не фамилия!)
-            <input type="text" id="nick" placeholder="Например, Котик_7Б">
+            <input type="text" id="nick" placeholder="Например, Котик_7Б" autocomplete="off">
+        </label>
+        <label>PIN — 4 цифры
+            <input type="password" id="pin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
         </label>
         <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
         <p class="error" id="login-error"></p>
         <button class="btn" onclick="login()">Войти</button>
-        <p class="hint">Код для проверки: 1234</p>
+        <button class="btn second" onclick="register()">Зарегистрироваться</button>
+        <p class="hint">Код школы для проверки: 1234</p>
     </section>
 
     <!-- ЭКРАН 2. Правила общения — первый экран после входа -->
@@ -100,7 +104,8 @@
         <div class="event"><b>Турнир 3×3 по баскетболу</b><span>Пятница, 15:00 · спортзал</span></div>
         <div class="event"><b>Посадка деревьев</b><span>Суббота, 11:00 · школьный двор</span></div>
         <div class="event"><b>Клуб настольных игр</b><span>Среда, 16:00 · каб. 204</span></div>
-        <button class="btn logout" onclick="logout()">Выйти и стереть мои данные с телефона</button>
+        <button class="btn logout" onclick="logout()">Выйти</button>
+        <button class="btn logout" onclick="deleteProfile()">Удалить мой профиль с этого телефона</button>
     </section>
 
     <!-- Меню внизу экрана -->

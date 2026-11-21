@@ -1,69 +1,137 @@
 // =====================================================================
-// ПАМЯТЬ НА ТЕЛЕФОНЕ (localStorage)
-// Всё, что нужно помнить, лежит в одном объекте state (как словарь в Python).
-// Он хранится только на телефоне пользователя, на сервер ничего не уходит.
+// ПОЛЬЗОВАТЕЛИ И ПАМЯТЬ НА ТЕЛЕФОНЕ (localStorage)
+// На одном телефоне может быть несколько профилей. Все они лежат в users —
+// это как словарь в Python: { "Котик_7Б": {pin: "1111", state: {...}}, ... }.
+// Данные хранятся только в браузере этого телефона, на сервер ничего не уходит.
 // =====================================================================
-let state = {
-    nick: "",          // ник
-    myMessages: [],    // свои сообщения (список строк)
-    hidden: [],        // id скрытых сообщений
-    reported: [],      // id сообщений, на которые пожаловался
-    joined: [],        // id инициатив, где нажал «Я в деле»
-    warnings: 0,       // сколько раз нарушил правила
-    blocked: false     // приостановлена ли отправка
-};
+const SCHOOL_CODE = "1234";   // код школы — один для всех учеников
 
-// Сохранить state на телефон
-function saveState() {
+let users = {};          // все профили на этом телефоне
+let currentNick = "";    // кто сейчас вошёл (пусто — никто)
+
+// Данные одного пользователя
+function emptyState() {
+    return {
+        myMessages: [],    // свои сообщения
+        hidden: [],        // id скрытых сообщений
+        reported: [],      // id сообщений, на которые пожаловался
+        joined: [],        // id инициатив, где нажал «Я в деле»
+        warnings: 0,       // сколько раз нарушил правила
+        blocked: false     // приостановлена ли отправка
+    };
+}
+let state = emptyState();
+
+// Загрузить всех пользователей с телефона
+function loadUsers() {
     try {
-        // localStorage хранит только текст, поэтому превращаем объект в JSON-строку
-        localStorage.setItem("schoolApp", JSON.stringify(state));
+        let saved = localStorage.getItem("schoolAppUsers");
+        if (saved) {
+            users = JSON.parse(saved);    // из JSON-строки в объект — как json.load в Python
+        }
+    } catch (e) {}
+}
+
+// Сохранить данные текущего пользователя
+function saveState() {
+    if (currentNick === "") {
+        return;
+    }
+    users[currentNick].state = state;
+    try {
+        localStorage.setItem("schoolAppUsers", JSON.stringify(users));   // как json.dump
     } catch (e) {
         // в режиме инкогнито хранилище может быть недоступно — приложение просто не запомнит
     }
 }
 
-// Загрузить state с телефона (если там что-то есть)
-function loadState() {
+// Кто вошёл, помним только пока открыта вкладка (sessionStorage).
+// Закрыл вкладку — следующему человеку придётся входить самому.
+function startSession(nick) {
     try {
-        let saved = localStorage.getItem("schoolApp");
-        if (saved) {
-            state = JSON.parse(saved);   // из JSON-строки обратно в объект — как json.load в Python
-        }
-    } catch (e) {
-        // если не получилось — начинаем с пустого state
-    }
+        sessionStorage.setItem("schoolAppCurrent", nick);
+    } catch (e) {}
+    currentNick = nick;
+    state = users[nick].state;
+    restoreScreen();         // показываем сообщения, жалобы и т.д. этого пользователя
+    location.hash = "rules"; // переходим на экран правил
 }
 
 // =====================================================================
-// ВХОД: код школы + ник
+// ВХОД И РЕГИСТРАЦИЯ
 // =====================================================================
-function login() {
-    // .value — то, что человек ввёл в поле; .trim() убирает пробелы по краям (как strip() в Python)
+// Считываем поля входа и проверяем то, что общее для входа и регистрации
+function readLoginForm() {
+    // .value — то, что ввели в поле; .trim() убирает пробелы по краям (как strip() в Python)
     let code = document.getElementById("code").value.trim();
     let nick = document.getElementById("nick").value.trim();
-    let error = document.getElementById("login-error");
+    let pin = document.getElementById("pin").value.trim();
 
-    if (code !== "1234") {                 // !== значит «строго не равно»
-        error.textContent = "Неверный код школы";
-        return;                            // дальше не пускаем
+    if (code !== SCHOOL_CODE) {            // !== значит «строго не равно»
+        return "Неверный код школы";
     }
     if (nick === "") {
-        error.textContent = "Придумай ник";
-        return;
+        return "Введи ник";
     }
-    state.nick = nick;
-    saveState();
-    location.hash = "rules";               // переходим на экран правил (как ссылка #rules)
+    if (pin.length !== 4 || isNaN(pin)) {  // isNaN — «это не число»
+        return "PIN — ровно 4 цифры";
+    }
+    return {nick: nick, pin: pin};         // всё в порядке — возвращаем ник и PIN
 }
 
-// Выход: стираем всё, что приложение запомнило на этом телефоне
+function showLoginError(text) {
+    document.getElementById("login-error").textContent = text;
+}
+
+function register() {
+    let form = readLoginForm();
+    if (typeof form === "string") {        // вернулась строка — значит, это текст ошибки
+        showLoginError(form);
+        return;
+    }
+    if (users[form.nick]) {
+        showLoginError("Такой ник уже занят на этом телефоне — придумай другой или войди");
+        return;
+    }
+    users[form.nick] = {pin: form.pin, state: emptyState()};   // создаём нового пользователя
+    currentNick = form.nick;
+    saveState();
+    startSession(form.nick);
+}
+
+function login() {
+    let form = readLoginForm();
+    if (typeof form === "string") {
+        showLoginError(form);
+        return;
+    }
+    if (!users[form.nick]) {
+        showLoginError("Такого пользователя нет — нажми «Зарегистрироваться»");
+        return;
+    }
+    if (users[form.nick].pin !== form.pin) {
+        showLoginError("Неверный PIN");
+        return;
+    }
+    startSession(form.nick);
+}
+
+// Выйти: профиль остаётся на телефоне, но войти можно только снова по PIN
 function logout() {
     try {
-        localStorage.removeItem("schoolApp");
+        sessionStorage.removeItem("schoolAppCurrent");
     } catch (e) {}
-    location.hash = "";
-    location.reload();                     // перезагружаем страницу «с чистого листа»
+    // Перезагружаем страницу без # — экран снова чистый, показывается вход
+    location.replace(location.pathname);
+}
+
+// Удалить свой профиль и все свои данные с этого телефона
+function deleteProfile() {
+    delete users[currentNick];             // как del users[nick] в Python
+    try {
+        localStorage.setItem("schoolAppUsers", JSON.stringify(users));
+    } catch (e) {}
+    logout();
 }
 
 // =====================================================================
@@ -141,7 +209,7 @@ function sendMessage() {
     state.myMessages.push(text);
     saveState();
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
-    addMessageToChat("my" + (state.myMessages.length - 1), state.nick || "Я", text);
+    addMessageToChat("my" + (state.myMessages.length - 1), currentNick, text);
     input.value = "";                      // очищаем поле
 }
 
@@ -192,42 +260,66 @@ function showJoined(card) {
 // =====================================================================
 // ПРИ ОТКРЫТИИ СТРАНИЦЫ: восстановить всё из памяти телефона
 // =====================================================================
-loadState();
-
-// Ник подставляем в поле входа, чтобы не вводить заново
-document.getElementById("nick").value = state.nick;
-
-// Свои сообщения рисуем обратно в чат
-for (let i = 0; i < state.myMessages.length; i++) {      // как for i in range(len(...))
-    addMessageToChat("my" + i, state.nick || "Я", state.myMessages[i]);
+loadUsers();
+try {
+    currentNick = sessionStorage.getItem("schoolAppCurrent") || "";
+} catch (e) {}
+if (currentNick !== "" && !users[currentNick]) {
+    currentNick = "";                      // такого профиля больше нет
 }
 
-// Скрытые сообщения снова скрываем
-for (let id of state.hidden) {
-    let message = document.getElementById(id);
-    if (message) {
-        showHidden(message);
+if (currentNick === "") {
+    // Никто не вошёл — пускаем только на экран входа
+    if (location.hash !== "" && location.hash !== "#login") {
+        location.hash = "login";
     }
+} else {
+    state = users[currentNick].state;
+    restoreScreen();
 }
 
-// Жалобы снова показываем как отправленные
-for (let id of state.reported) {
-    let message = document.getElementById(id);
-    if (message && !state.hidden.includes(id)) {
-        let button = message.querySelectorAll(".actions button")[1];   // вторая кнопка — «Пожаловаться»
-        showReported(button);
+// Если кто-то без входа пытается перейти на другой экран по ссылке — возвращаем на вход
+window.addEventListener("hashchange", function () {
+    if (currentNick === "" && location.hash !== "" && location.hash !== "#login") {
+        location.hash = "login";
     }
-}
+});
 
-// Инициативы, где нажимал «Я в деле»
-for (let id of state.joined) {
-    let card = document.getElementById(id);
-    if (card) {
-        showJoined(card);
+// Восстановить экран из данных пользователя
+function restoreScreen() {
+
+    // Свои сообщения рисуем обратно в чат
+    for (let i = 0; i < state.myMessages.length; i++) {      // как for i in range(len(...))
+        addMessageToChat("my" + i, currentNick, state.myMessages[i]);
     }
-}
 
-// Если отправка была приостановлена — сразу показываем предупреждение
-if (state.blocked) {
-    showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
+    // Скрытые сообщения снова скрываем
+    for (let id of state.hidden) {
+        let message = document.getElementById(id);
+        if (message) {
+            showHidden(message);
+        }
+    }
+
+    // Жалобы снова показываем как отправленные
+    for (let id of state.reported) {
+        let message = document.getElementById(id);
+        if (message && !state.hidden.includes(id)) {
+            let button = message.querySelectorAll(".actions button")[1];   // вторая кнопка — «Пожаловаться»
+            showReported(button);
+        }
+    }
+
+    // Инициативы, где нажимал «Я в деле»
+    for (let id of state.joined) {
+        let card = document.getElementById(id);
+        if (card) {
+            showJoined(card);
+        }
+    }
+
+    // Если отправка была приостановлена — сразу показываем предупреждение
+    if (state.blocked) {
+        showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
+    }
 }
