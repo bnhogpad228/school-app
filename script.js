@@ -236,9 +236,11 @@ function renderChat() {
         let my = state.myMessages[i];
         if (typeof my === "string") {      // старый формат (до кружков) — считаем, что это «Роботы»
             my = {club: "robots", text: my};
+            state.myMessages[i] = my;
         }
-        if (my.club === currentClub) {
-            addMessageToChat("my" + i, currentNick, my.text);
+        if (my.club === currentClub && !my.deletedForMe) {   // удалённые «у себя» не показываем вовсе
+            let message = addMessageToChat("my" + i, currentNick, my.text);
+            showMyMessageState(message, my);
         }
     }
 
@@ -264,11 +266,14 @@ function addMessageToChat(id, nick, text, container = "messages", canWritePrivat
     if (canWritePrivately && nick !== currentNick) {
         privateButton = '<button onclick="requestPrivate(this)">Написать лично</button>';
     }
-    message.innerHTML = '<b></b><p></p>' +
-        '<div class="actions"><button onclick="hideMessage(this)">Скрыть</button>' +
-        '<button onclick="report(this)">Пожаловаться</button>' + privateButton + '</div>';
     if (nick === currentNick) {
-        message.classList.add("mine");     // своё сообщение — с цветной полоской слева
+        // Своё сообщение: жаловаться и скрывать незачем — можно изменить или удалить
+        message.innerHTML = '<b></b><p></p><div class="actions">' + MY_ACTIONS + '</div>';
+        message.classList.add("mine");     // своё сообщение — справа, своим цветом
+    } else {
+        message.innerHTML = '<b></b><p></p>' +
+            '<div class="actions"><button onclick="hideMessage(this)">Скрыть</button>' +
+            '<button onclick="report(this)">Пожаловаться</button>' + privateButton + '</div>';
     }
 
     // Ник и текст вставляем через textContent — так чужой код в сообщении не выполнится
@@ -302,6 +307,116 @@ function sendMessage() {
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
     addMessageToChat("my" + (state.myMessages.length - 1), currentNick, text);
     input.value = "";                      // очищаем поле
+}
+
+// =====================================================================
+// СВОИ СООБЩЕНИЯ: изменить и удалить (у всех или у себя)
+// =====================================================================
+const MY_ACTIONS = '<button onclick="editMessage(this)">Изменить</button>' +
+                   '<button onclick="askDelete(this)">Удалить</button>';
+
+// Найти данные своего сообщения по id блока.
+// my3 → state.myMessages[3];  dm-Ник-2 → state.dm["Ник"].messages[2]
+function myMessageData(id) {
+    if (id.startsWith("my")) {
+        return state.myMessages[Number(id.slice(2))];        // slice(2) — всё после «my»
+    }
+    let last = id.lastIndexOf("-");                           // номер — после последнего дефиса
+    let nick = id.slice(3, last);                             // ник — между «dm-» и номером
+    return state.dm[nick].messages[Number(id.slice(last + 1))];
+}
+
+// Показать, что сообщение удалено у всех или изменено
+function showMyMessageState(message, data) {
+    if (data.deleted) {
+        message.querySelector("p").textContent = "🚫 Сообщение удалено";
+        message.querySelector("p").className = "muted";
+        message.querySelector(".actions").remove();          // удалённое больше не изменить
+    } else if (data.edited) {
+        let mark = document.createElement("span");
+        mark.className = "edited";
+        mark.textContent = " (изменено)";
+        message.querySelector("p").append(mark);
+    }
+}
+
+// Куда выводить предупреждение: в чат кружка или в личный чат
+function warningFor(message) {
+    let id = message.closest("#dm-messages") ? "dm-warning" : "chat-warning";
+    return function (text) { document.getElementById(id).textContent = text; };
+}
+
+// Нажали «Удалить» — вместо кнопок показываем развилку
+function askDelete(button) {
+    let actions = button.closest(".actions");
+    actions.innerHTML = '<span class="ask">Удалить сообщение?</span>' +
+        '<button onclick="deleteMessage(this, true)">У всех</button>' +
+        '<button onclick="deleteMessage(this, false)">У себя</button>' +
+        '<button onclick="cancelAction(this)">Отмена</button>';
+}
+
+// forAll = true — удалить у всех, false — только у себя
+function deleteMessage(button, forAll) {
+    let message = button.closest(".message");
+    let data = myMessageData(message.id);
+    if (forAll) {
+        data.deleted = true;               // все увидят «Сообщение удалено»
+        data.text = "";                    // сам текст стираем
+        saveState();
+        showMyMessageState(message, data);
+    } else {
+        data.deletedForMe = true;          // пропадает только с моего экрана
+        saveState();
+        message.remove();
+    }
+}
+
+// Отмена — возвращаем обычные кнопки «Изменить» и «Удалить»
+function cancelAction(button) {
+    button.closest(".actions").innerHTML = MY_ACTIONS;
+}
+
+// Нажали «Изменить» — текст сообщения превращается в поле ввода
+function editMessage(button) {
+    let message = button.closest(".message");
+    let data = myMessageData(message.id);
+    let p = message.querySelector("p");
+    p.innerHTML = '<input type="text" class="edit-input">';
+    p.querySelector("input").value = data.text;                // через value — безопасно
+    p.querySelector("input").focus();
+    button.closest(".actions").innerHTML =
+        '<button onclick="saveEdit(this)">Сохранить</button>' +
+        '<button onclick="cancelEdit(this)">Отмена</button>';
+}
+
+function saveEdit(button) {
+    let message = button.closest(".message");
+    let data = myMessageData(message.id);
+    let text = message.querySelector(".edit-input").value.trim();
+    if (text === "") {
+        return;                            // пустым сообщение сделать нельзя — для этого есть «Удалить»
+    }
+    if (stopRudeOrBlocked(text, warningFor(message))) {
+        return;                            // правка тоже проходит фильтр грубых слов
+    }
+    if (text !== data.text) {
+        data.text = text;
+        data.edited = true;
+        saveState();
+    }
+    finishEdit(message, data);
+}
+
+function cancelEdit(button) {
+    let message = button.closest(".message");
+    finishEdit(message, myMessageData(message.id));
+}
+
+// Вернуть сообщение в обычный вид после правки
+function finishEdit(message, data) {
+    message.querySelector("p").textContent = data.text;
+    message.querySelector(".actions").innerHTML = MY_ACTIONS;
+    showMyMessageState(message, data);
 }
 
 // =====================================================================
@@ -504,8 +619,13 @@ function openDm(nick) {
     let messages = dmOf(nick).messages;
     for (let i = 0; i < messages.length; i++) {
         let id = "dm-" + nick + "-" + i;
+        if (messages[i].deletedForMe) {
+            continue;                      // удалённое «у себя» пропускаем (continue — как в Python)
+        }
         let message = addMessageToChat(id, messages[i].from, messages[i].text, "dm-messages", false);
-        if (state.hidden.includes(id)) {
+        if (messages[i].from === currentNick) {
+            showMyMessageState(message, messages[i]);
+        } else if (state.hidden.includes(id)) {
             showHidden(message);
         } else if (state.reported.includes(id)) {
             showReported(message.querySelectorAll(".actions button")[1]);

@@ -277,3 +277,8 @@ body:has(#dm:target) { background: var(--chat-bg); }
 /* Кнопки на моих сообщениях — своим цветом */
 #messages .message.mine .actions button,
 #dm-messages .message.mine .actions button { color: var(--chat-accent-mine); }
+
+/* ===== Свои сообщения: правка и удаление ===== */
+.edit-input { margin: 0; padding: 8px 10px; font-size: 15px; }
+.message .edited { font-size: 12px; opacity: 0.7; }
+.actions .ask { font-size: 12px; font-weight: bold; margin-right: 6px; color: var(--chat-text); }
