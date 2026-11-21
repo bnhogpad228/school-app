@@ -342,3 +342,30 @@ body:has(#register:target) { background: var(--login-bg); }
     text-underline-offset: 4px;
 }
 #login .error, #register .error { color: #ffb4a8; }   /* ошибка — светло-красная, видна на тёмном */
+
+/* ===== Формы «Предложить инициативу» и «Сообщить о событии» ===== */
+.new-form { margin-bottom: 16px; }
+.new-form summary { list-style: none; }            /* убираем стандартный треугольник */
+.new-form summary::-webkit-details-marker { display: none; }
+.new-form[open] { background: var(--card); border-radius: 16px; padding: 0 14px 14px; }
+.new-form[open] summary { margin: 0 -14px 4px; }
+
+/* ===== События: «Пойду» и число участников ===== */
+.event-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); }
+.event-foot .go {
+    margin-left: auto;
+    border: 1px solid var(--main);
+    background: none;
+    color: var(--main);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.event-foot .go:disabled { border-color: var(--line); color: var(--muted); }
+.c0 { background: #3d6fb4; }
+.mine-tag { color: var(--main); font-weight: 700; font-size: 13px; }
+
+/* Кнопки «Разрешить / Отклонить» переносятся на маленьких экранах */
+.dm-row { flex-wrap: wrap; }
+.event .mine-tag { display: inline; color: var(--main); margin-left: 6px; }

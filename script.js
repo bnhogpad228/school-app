@@ -13,6 +13,8 @@ let currentNick = "";    // кто сейчас вошёл (пусто — ни�
 function emptyState() {
     return {
         myMessages: [],    // свои сообщения
+        myIdeas: [],       // свои инициативы
+        myEvents: [],      // свои события
         hidden: [],        // id скрытых сообщений
         reported: [],      // id сообщений, на которые пожаловался
         joined: [],        // id инициатив, где нажал «Я в деле»
@@ -209,6 +211,17 @@ const CLUBS = {
         ["Капля_9В", "Предлагаю поставить контейнеры для раздельного сбора."]
     ]}
 };
+// Чат своего класса: создаётся при входе, по классу из профиля (например, «Класс 7Б»)
+function setupClassChat() {
+    let grade = users[currentNick].grade || "";
+    CLUBS["class"] = {name: "Класс " + grade, icon: "🏫", messages: [
+        ["Лиса_" + grade, "Кто понял домашку по алгебре? Номер 214."],
+        ["Звезда_" + grade, "Напоминаю: завтра экскурсия, сбор в 9:00 у входа."],
+        ["Пингвин_" + grade, "Кто-нибудь нашёл синюю куртку в раздевалке?"]
+    ]};
+    document.getElementById("class-label").textContent = "Класс " + grade;
+}
+
 let currentClub = "robots";   // какой чат открыт сейчас
 
 // Нажали на кружок: запоминаем его и рисуем его чат
@@ -465,8 +478,9 @@ function showChatWarning(text) {
 // =====================================================================
 // ИНИЦИАТИВЫ: «Я в деле»
 // =====================================================================
+// Подходит и для инициатив («Я в деле»), и для событий («Пойду»)
 function join(button) {
-    let card = button.closest(".card");
+    let card = button.closest(".card, .event");
     if (!state.joined.includes(card.id)) {
         state.joined.push(card.id);
         saveState();
@@ -477,12 +491,77 @@ function join(button) {
 function showJoined(card) {
     let count = card.querySelector(".count");
     let button = card.querySelector("button");
-    if (button.disabled) {
+    if (!button || button.disabled) {
         return;                            // уже отмечено — второй раз не прибавляем
     }
     count.textContent = Number(count.textContent) + 1;   // Number() — как int() в Python
-    button.textContent = "Ты в команде";
+    button.textContent = button.dataset.done;            // текст после нажатия берём из data-done
     button.disabled = true;
+}
+
+// =====================================================================
+// СВОИ ИНИЦИАТИВЫ И СОБЫТИЯ: предложить / сообщить
+// =====================================================================
+function addIdea() {
+    let title = document.getElementById("idea-title").value.trim();
+    let text = document.getElementById("idea-text").value.trim();
+    let warn = function (t) { document.getElementById("idea-warning").textContent = t; };
+    if (title === "") {
+        warn("Напиши, что вы сделаете");
+        return;
+    }
+    if (stopRudeOrBlocked(title + " " + text, warn)) {
+        return;                            // инициатива тоже проходит фильтр
+    }
+    state.myIdeas.push({title: title, text: text});
+    saveState();
+    drawMyIdea(state.myIdeas.length - 1);
+    document.getElementById("idea-title").value = "";
+    document.getElementById("idea-text").value = "";
+    document.querySelector("#ideas .new-form").open = false;   // сворачиваем форму
+}
+
+function drawMyIdea(i) {
+    let idea = state.myIdeas[i];
+    let card = document.createElement("div");
+    card.className = "card";
+    card.id = "myidea" + i;
+    card.innerHTML = '<h2></h2><p class="muted"></p><p class="mine-tag">Ты автор</p><p>Участников: <b class="count">1</b></p>';
+    card.querySelector("h2").textContent = idea.title;           // textContent — безопасно
+    card.querySelector(".muted").textContent = idea.text;
+    document.getElementById("my-ideas").prepend(card);          // новая — сверху
+}
+
+function addEvent() {
+    let title = document.getElementById("event-title").value.trim();
+    let when = document.getElementById("event-when").value.trim();
+    let place = document.getElementById("event-place").value.trim();
+    let warn = function (t) { document.getElementById("event-warning").textContent = t; };
+    if (title === "" || when === "") {
+        warn("Напиши название и когда");
+        return;
+    }
+    if (stopRudeOrBlocked(title + " " + when + " " + place, warn)) {
+        return;
+    }
+    state.myEvents.push({title: title, when: when, place: place});
+    saveState();
+    drawMyEvent(state.myEvents.length - 1);
+    for (let id of ["event-title", "event-when", "event-place"]) {
+        document.getElementById(id).value = "";
+    }
+    document.querySelector("#events .new-form").open = false;
+}
+
+function drawMyEvent(i) {
+    let ev = state.myEvents[i];
+    let div = document.createElement("div");
+    div.className = "event";
+    div.id = "myevent" + i;
+    div.innerHTML = '<b></b><span></span><div class="event-foot">Идут: <b class="count">1</b> <span class="mine-tag">Ты организатор</span></div>';
+    div.querySelector("b").textContent = ev.title;
+    div.querySelector("span").textContent = ev.when + (ev.place ? " · " + ev.place : "");
+    document.getElementById("my-events").prepend(div);
 }
 
 // =====================================================================
@@ -724,8 +803,14 @@ function restoreScreen() {
     if (!state.settings) {
         state.settings = {dark: false, big: false};
     }
+    // У старых профилей этих списков ещё нет
+    if (!state.myIdeas) { state.myIdeas = []; }
+    if (!state.myEvents) { state.myEvents = []; }
     applySettings();
     showProfile();
+    setupClassChat();
+    for (let i = 0; i < state.myIdeas.length; i++) { drawMyIdea(i); }
+    for (let i = 0; i < state.myEvents.length; i++) { drawMyEvent(i); }
     // Для показа: один придуманный ученик уже просит написать тебе лично
     if (!state.dm) {
         state.dm = {"Скрипка_7В": {status: "incoming", messages: [
@@ -750,4 +835,14 @@ function restoreScreen() {
     if (state.blocked) {
         showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
     }
+}
+
+// =====================================================================
+// PWA: подключаем service worker (sw.js) — приложение можно установить
+// на телефон и открывать без интернета после первого запуска
+// =====================================================================
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(function () {
+        // если не получилось (например, открыто как файл) — сайт просто работает как обычно
+    });
 }
