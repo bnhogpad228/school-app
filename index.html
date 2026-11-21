@@ -329,6 +329,16 @@
         </div>
     </div>
 
+    <!-- Окно подтверждения для действий, которые нельзя отменить -->
+    <div class="dialog-bg" id="confirm-dialog" onclick="if (event.target === this) closeConfirm()">
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+            <h2 id="confirm-title"></h2>
+            <p class="hint" id="confirm-text"></p>
+            <button class="dialog-btn danger" id="confirm-yes"></button>
+            <button class="dialog-btn plain" onclick="closeConfirm()">Отмена</button>
+        </div>
+    </div>
+
     <!-- Меню внизу экрана -->
     <nav class="menu">
         <a href="#chat" data-roles="student">Чат</a>

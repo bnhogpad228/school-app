@@ -219,13 +219,41 @@ function logout() {
     location.replace(location.pathname);
 }
 
+// =====================================================================
+// ПОДТВЕРЖДЕНИЕ: всё, что нельзя отменить, сначала спрашиваем в окне посередине
+// =====================================================================
+let confirmAction = null;            // что сделать, если человек нажмёт «Да»
+
+function askConfirm(title, text, yesText, action) {
+    document.getElementById("confirm-title").textContent = title;
+    document.getElementById("confirm-text").textContent = text;
+    document.getElementById("confirm-yes").textContent = yesText;
+    confirmAction = action;
+    document.getElementById("confirm-dialog").classList.add("open");
+}
+
+function closeConfirm() {
+    confirmAction = null;
+    document.getElementById("confirm-dialog").classList.remove("open");
+}
+
+document.getElementById("confirm-yes").onclick = function () {
+    let action = confirmAction;
+    closeConfirm();
+    if (action) {
+        action();
+    }
+};
+
 // Удалить свой профиль и все свои данные с этого телефона
 function deleteProfile() {
-    delete users[currentNick];             // как del users[nick] в Python
-    try {
-        localStorage.setItem("schoolAppUsers", JSON.stringify(users));
-    } catch (e) {}
-    logout();
+    askConfirm("Удалить профиль?", "Твои сообщения, кружки и настройки пропадут с этого телефона. Вернуть их будет нельзя.", "Удалить профиль", function () {
+        delete users[currentNick];         // как del users[nick] в Python
+        try {
+            localStorage.setItem("schoolAppUsers", JSON.stringify(users));
+        } catch (e) {}
+        logout();
+    });
 }
 
 // =====================================================================
@@ -234,11 +262,13 @@ function deleteProfile() {
 function hideMessage(button) {
     // closest(".message") — ищем вверх ближайший блок сообщения, в котором лежит кнопка
     let message = button.closest(".message");
-    if (!state.hidden.includes(message.id)) {
-        state.hidden.push(message.id);     // push — как append в Python
-        saveState();
-    }
-    showHidden(message);
+    askConfirm("Скрыть сообщение?", "Оно пропадёт только у тебя, другие его увидят. Вернуть его будет нельзя.", "Скрыть", function () {
+        if (!state.hidden.includes(message.id)) {
+            state.hidden.push(message.id); // push — как append в Python
+            saveState();
+        }
+        showHidden(message);
+    });
 }
 
 function showHidden(message) {
@@ -247,11 +277,13 @@ function showHidden(message) {
 
 function report(button) {
     let message = button.closest(".message");
-    if (!state.reported.includes(message.id)) {
-        state.reported.push(message.id);
-        saveState();
-    }
-    showReported(button);
+    askConfirm("Пожаловаться на сообщение?", "Жалоба уйдёт модератору — учителю. Отменить её будет нельзя.", "Пожаловаться", function () {
+        if (!state.reported.includes(message.id)) {
+            state.reported.push(message.id);
+            saveState();
+        }
+        showReported(button);
+    });
 }
 
 function showReported(button) {
@@ -389,6 +421,12 @@ function addAnnouncement() {
 }
 
 function deleteAnnouncement(time) {
+    askConfirm("Удалить объявление?", "Ученики и родители больше его не увидят.", "Удалить", function () {
+        removeAnnouncement(time);
+    });
+}
+
+function removeAnnouncement(time) {
     let list = loadAnnouncements().filter(function (a) { return !(a.time === time && a.from === currentNick); });
     saveAnnouncements(list);
     renderAnnouncements();
@@ -648,6 +686,12 @@ function showTeacherHidden(message) {
 
 function teacherHide(button) {
     let message = button.closest(".message");
+    askConfirm("Скрыть сообщение у всех?", "Его не увидит никто, включая автора. Вернуть его будет нельзя.", "Скрыть у всех", function () {
+        hideForAll(message);
+    });
+}
+
+function hideForAll(message) {
     let moderation = loadModeration();
     if (!moderation.hidden.includes(message.dataset.gid)) {
         moderation.hidden.push(message.dataset.gid);
@@ -717,6 +761,14 @@ function renderReports() {
 }
 
 function resolveReport(gid, hide) {
+    if (hide) {
+        askConfirm("Скрыть сообщение у всех?", "Его не увидит никто, включая автора. Вернуть его будет нельзя.", "Скрыть у всех", function () { closeReport(gid, true); });
+    } else {
+        askConfirm("Оставить сообщение?", "Жалоба будет закрыта, сообщение останется в чате.", "Оставить", function () { closeReport(gid, false); });
+    }
+}
+
+function closeReport(gid, hide) {
     let moderation = loadModeration();
     if (hide) {
         moderation.hidden.push(gid);
@@ -869,6 +921,7 @@ function deleteMessage(forAll) {
 document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
         closeDeleteDialog();
+        closeConfirm();
     }
 });
 
@@ -1172,20 +1225,25 @@ function acceptDm(nick) {
 }
 
 function declineDm(nick) {
-    delete state.dm[nick];                 // запрос просто исчезает, собеседник не узнаёт причину
-    saveState();
-    renderPrivate();
+    askConfirm("Отклонить запрос?", nick + " не узнает причину и сможет отправить запрос снова.", "Отклонить", function () {
+        delete state.dm[nick];             // запрос просто исчезает, собеседник не узнаёт причину
+        saveState();
+        renderPrivate();
+    });
 }
 
 function blockDm() {
-    dmOf(currentDm).status = "blocked";
-    saveState();
-    location.hash = "private";
-    renderPrivate();
+    let nick = currentDm;
+    askConfirm("Заблокировать " + nick + "?", "Он не сможет тебе писать. Разблокировать можно в разделе ✉️ — переписка сохранится.", "Заблокировать", function () {
+        dmOf(nick).status = "blocked";     // переписку не удаляем
+        saveState();
+        location.hash = "private";
+        renderPrivate();
+    });
 }
 
 function unblockDm(nick) {
-    delete state.dm[nick];                 // после разблокировки можно снова отправить запрос
+    dmOf(nick).status = "allowed";         // чат возвращается вместе со всей перепиской
     saveState();
     renderPrivate();
 }
@@ -1218,6 +1276,7 @@ function renderPrivate() {
             buttons.append(makeButton("Открыть чат", "btn", function () { openDm(nick); }));
             chats.append(row);
         } else if (dm.status === "blocked") {
+            row.querySelector("b").textContent = nick + " · заблокирован";
             buttons.append(makeButton("Разблокировать", "btn logout", function () { unblockDm(nick); }));
             chats.append(row);
         }
