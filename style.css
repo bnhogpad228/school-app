@@ -464,3 +464,79 @@ body:not(.dark) .molecule .atom-o { fill: #e0904a; }
 .icon-pick input:checked + span { border-color: var(--main); }   /* выбранный значок — в рамке */
 .c-new { background: #8a6fd1; }                                    /* цвет своих кружков */
 .empty-hint { color: var(--chat-text); opacity: 0.85; text-align: center; margin: 24px 0; }
+
+/* Атрибут hidden всегда прячет элемент, даже если у него свой display */
+[hidden] { display: none !important; }
+
+/* ===== Регистрация: выбор роли и кружков учителя ===== */
+.role-pick { display: flex; gap: 8px; margin: 8px 0 4px; }
+#register .role-pick label, #register .club-checks label { display: block; margin: 0; font-size: 16px; }
+.role-pick label { flex: 1; }
+#register .role-pick input, #register .club-checks input {
+    position: absolute; opacity: 0; width: 0; height: 0; padding: 0; margin: 0;   /* сам переключатель прячем */
+}
+.role-pick span, .club-checks span {
+    display: block;
+    min-height: 44px; line-height: 44px;   /* зона нажатия 44px */
+    padding: 0 12px;
+    border-radius: 999px;
+    text-align: center;
+    background: var(--login-field);
+    color: var(--login-field-text);
+    font-weight: 700;
+    cursor: pointer;
+}
+.role-pick input:checked + span, .club-checks input:checked + span {
+    background: var(--login-button);
+    color: var(--login-button-text);
+}
+.club-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+#register .pick-title { color: var(--login-text); }
+.label-note { font-weight: normal; font-size: 14px; opacity: 0.8; }
+
+/* ===== Чат: участники, вступить, «только чтение» ===== */
+.club-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 12px; }
+.chip {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid var(--chat-text);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--chat-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#members-list {
+    background: var(--bubble-other);
+    color: var(--chat-text);
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+}
+.member { padding: 4px 0; font-weight: 600; }
+.member-note { font-weight: normal; opacity: 0.75; font-size: 13px; }
+.readonly-note {
+    color: var(--chat-text);
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+/* ===== Учитель и родитель: без кнопок «Я в деле» и «Пойду» ===== */
+body:not(.role-student) #ideas .card .btn,
+body:not(.role-student) #events .go { display: none; }
+
+/* ===== Жалобы (экран учителя) ===== */
+.report-text { font-size: 16px; }
+.report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.report-actions .btn { margin: 0; }
+.ok-note { color: var(--main); font-weight: bold; }
+
+/* ===== Кружки по макету: круги «шахматкой» — персиковый и мятный (в тёмной теме — бирюзовый и зелёный) ===== */
+#clubs-grid .club:nth-child(4n+1) .circle, #clubs-grid .club:nth-child(4n+4) .circle { background: #f3c99c; }
+#clubs-grid .club:nth-child(4n+2) .circle, #clubs-grid .club:nth-child(4n+3) .circle { background: #7fdfbf; }
+body.dark #clubs-grid .club:nth-child(4n+1) .circle, body.dark #clubs-grid .club:nth-child(4n+4) .circle { background: #4f97a6; }
+body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club:nth-child(4n+3) .circle { background: #2e8a6a; }

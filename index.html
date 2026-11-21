@@ -35,12 +35,12 @@
                 <circle class="atom-n" cx="94.0" cy="6.0" r="3.4"/>
             </svg>
         </div>
-        <p class="muted">Приложение для учеников нашей школы. Код школы один для всех учеников — так посторонние не войдут.</p>
-        <label>Код школы
+        <p class="muted">Приложение для учеников, учителей и родителей нашей школы. Код школы один для всех — так посторонние не войдут.</p>
+        <label>Код школы <span class="label-note">(учителям — код учителя)</span>
             <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
         <label>Ник
-            <input type="text" id="nick" placeholder="Например, Котик_7Б" autocomplete="off">
+            <input type="text" id="nick" placeholder="Например, Енот_7Б" autocomplete="off">
         </label>
         <label>Пароль
             <input type="password" id="password" autocomplete="off">
@@ -53,14 +53,24 @@
     <!-- ЭКРАН 1а. Регистрация: код школы, ник, класс, пароль два раза. Никаких фамилий и телефонов -->
     <section class="screen" id="register">
         <h1>Регистрация</h1>
-        <label>Код школы
+        <!-- Кто регистрируется: у каждой роли свои возможности -->
+        <div class="role-pick">
+            <label><input type="radio" name="role" value="student" checked onchange="changeRole()"><span>Ученик</span></label>
+            <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span>Учитель</span></label>
+            <label><input type="radio" name="role" value="parent" onchange="changeRole()"><span>Родитель</span></label>
+        </div>
+        <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
+        <label><span id="reg-code-label">Код школы</span>
             <input type="text" id="reg-code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
-        <label>Ник (не фамилия!)
-            <input type="text" id="reg-nick" placeholder="Например, Котик_7Б" autocomplete="off">
+        <label><span id="reg-nick-label">Ник (не фамилия!)</span>
+            <input type="text" id="reg-nick" placeholder="Например, Енот_7Б" autocomplete="off">
         </label>
-        <label>Класс</label>
-        <div class="row">
+        <label data-reg="parent" hidden>Ник ребёнка в приложении
+            <input type="text" id="reg-child" placeholder="Например, Енот_7Б" autocomplete="off">
+        </label>
+        <label data-reg="student teacher" id="reg-grade-label">Класс</label>
+        <div class="row" data-reg="student teacher">
             <select id="reg-grade">
                 <option value="">Номер</option>
                 <option>5</option><option>6</option><option>7</option><option>8</option>
@@ -70,6 +80,17 @@
                 <option value="">Буква</option>
                 <option>А</option><option>Б</option><option>В</option><option>Г</option><option>Д</option>
             </select>
+        </div>
+        <div data-reg="teacher" hidden>
+            <p class="pick-title">Какие кружки вы ведёте</p>
+            <div class="club-checks">
+                <label><input type="checkbox" name="teach-club" value="music"><span>🎵 Музыка</span></label>
+                <label><input type="checkbox" name="teach-club" value="basketball"><span>🏀 Баскетбол</span></label>
+                <label><input type="checkbox" name="teach-club" value="robots"><span>🤖 Роботы</span></label>
+                <label><input type="checkbox" name="teach-club" value="books"><span>📚 Книги</span></label>
+                <label><input type="checkbox" name="teach-club" value="photo"><span>📷 Фото</span></label>
+                <label><input type="checkbox" name="teach-club" value="eco"><span>🌱 Экология</span></label>
+            </div>
         </div>
         <label>Пароль (не меньше 4 символов)
             <input type="password" id="reg-password" autocomplete="new-password">
@@ -93,16 +114,23 @@
             <li>Увидел плохое — нажми «Пожаловаться».</li>
             <li>Личные сообщения — только если согласны оба.</li>
         </ol>
-        <a class="btn" href="#chat">Принимаю</a>
+        <a class="btn" href="#chat" onclick="return acceptRules()">Принимаю</a>
     </section>
 
     <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
     <section class="screen" id="chat">
         <h1 id="chat-title">Чат</h1>
+        <!-- Участники кружка и кнопка «Вступить» -->
+        <div class="club-bar">
+            <button class="chip" id="members-btn" onclick="toggleMembers()">👥 Участники</button>
+            <button class="chip" id="join-btn" data-roles="student" onclick="toggleJoin()">Вступить в кружок</button>
+        </div>
+        <div id="members-list" hidden></div>
         <!-- Сообщения рисует script.js — у каждого кружка свои -->
         <div id="messages"></div>
         <p class="error" id="chat-warning"></p>
-        <div class="send">
+        <p class="readonly-note" data-roles="teacher parent" hidden id="chat-readonly"></p>
+        <div class="send" data-roles="student">
             <input type="text" id="new-message" placeholder="Сообщение...">
             <button class="btn small" onclick="sendMessage()">Отправить</button>
         </div>
@@ -110,8 +138,8 @@
 
     <!-- ЭКРАН 4. Кружки по интересам -->
     <section class="screen" id="clubs">
-        <h1>Кружки и классы</h1>
-        <details class="new-form">
+        <h1 id="clubs-title">Кружки и классы</h1>
+        <details class="new-form" data-roles="student">
             <summary class="btn second">+ Создать кружок</summary>
             <label>Название
                 <input type="text" id="club-name" maxlength="30" placeholder="Например, Шахматы">
@@ -133,13 +161,13 @@
             <button class="btn" onclick="addClub()">Создать</button>
         </details>
         <div class="grid" id="clubs-grid">
-            <a class="club" href="#chat" onclick="openClub('class')"><span class="circle c0">🏫</span><span id="class-label">Мой класс</span></a>
-            <a class="club" href="#chat" onclick="openClub('music')"><span class="circle c1">🎵</span>Музыка</a>
-            <a class="club" href="#chat" onclick="openClub('basketball')"><span class="circle c2">🏀</span>Баскетбол</a>
-            <a class="club" href="#chat" onclick="openClub('robots')"><span class="circle c3">🤖</span>Роботы</a>
-            <a class="club" href="#chat" onclick="openClub('books')"><span class="circle c4">📚</span>Книги</a>
-            <a class="club" href="#chat" onclick="openClub('photo')"><span class="circle c5">📷</span>Фото</a>
-            <a class="club" href="#chat" onclick="openClub('eco')"><span class="circle c6">🌱</span>Экология</a>
+            <a class="club" data-club="class" href="#chat" onclick="openClub('class')"><span class="circle c0">🏫</span><span id="class-label">Мой класс</span></a>
+            <a class="club" data-club="music" href="#chat" onclick="openClub('music')"><span class="circle c1">🎵</span>Музыка</a>
+            <a class="club" data-club="basketball" href="#chat" onclick="openClub('basketball')"><span class="circle c2">🏀</span>Баскетбол</a>
+            <a class="club" data-club="robots" href="#chat" onclick="openClub('robots')"><span class="circle c3">🤖</span>Роботы</a>
+            <a class="club" data-club="books" href="#chat" onclick="openClub('books')"><span class="circle c4">📚</span>Книги</a>
+            <a class="club" data-club="photo" href="#chat" onclick="openClub('photo')"><span class="circle c5">📷</span>Фото</a>
+            <a class="club" data-club="eco" href="#chat" onclick="openClub('eco')"><span class="circle c6">🌱</span>Экология</a>
         </div>
     </section>
 
@@ -147,7 +175,7 @@
     <section class="screen" id="ideas">
         <h1>Инициативы</h1>
         <p class="hint">Предложил — собрал людей — сделал.</p>
-        <details class="new-form">
+        <details class="new-form" data-roles="student">
             <summary class="btn second">+ Предложить инициативу</summary>
             <label>Что сделаем?
                 <input type="text" id="idea-title" maxlength="60" placeholder="Например, Субботник у стадиона">
@@ -176,7 +204,7 @@
     <!-- ЭКРАН 6. Афиша событий -->
     <section class="screen" id="events">
         <h1>События</h1>
-        <details class="new-form">
+        <details class="new-form" data-roles="student">
             <summary class="btn second">+ Сообщить о событии</summary>
             <label>Что за событие?
                 <input type="text" id="event-title" maxlength="60" placeholder="Например, Турнир по шахматам">
@@ -206,7 +234,9 @@
         <div class="card">
             <h2>Мой профиль</h2>
             <p>Ник: <b id="profile-nick"></b></p>
+            <p>Роль: <b id="profile-role"></b></p>
             <p>Класс: <b id="profile-grade"></b></p>
+            <p id="profile-extra"></p>
             <p class="hint">Мы не храним фамилию, телефон и геолокацию.</p>
         </div>
 
@@ -224,7 +254,8 @@
 
         <div class="card">
             <h2>Общение</h2>
-            <p>Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
+            <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
+            <p data-roles="teacher parent" hidden>Учителя и родители не видят личные сообщения учеников и не могут писать им лично.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
@@ -257,6 +288,14 @@
         <button class="btn logout danger-text" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
+    <!-- ЭКРАН 10. Жалобы — только для учителя -->
+    <section class="screen" id="reports">
+        <h1>Жалобы учеников</h1>
+        <p class="hint">Жалобы на сообщения в ваших кружках и в чате вашего класса. Личные сообщения учеников учитель не видит.</p>
+        <p class="ok-note" id="reports-done"></p>
+        <div id="reports-list"></div>
+    </section>
+
     <!-- Окно «Удалить сообщение?» — появляется посередине экрана -->
     <div class="dialog-bg" id="delete-dialog" onclick="if (event.target === this) closeDeleteDialog()">
         <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
@@ -270,11 +309,12 @@
 
     <!-- Меню внизу экрана -->
     <nav class="menu">
-        <a href="#chat">Чат</a>
+        <a href="#chat" data-roles="student">Чат</a>
         <a href="#clubs">Кружки</a>
         <a href="#ideas">Идеи</a>
         <a href="#events">События</a>
-        <a href="#private">✉️</a>
+        <a href="#reports" data-roles="teacher" hidden>Жалобы</a>
+        <a href="#private" data-roles="student">✉️</a>
         <a href="#settings">⚙️</a>
     </nav>
 
