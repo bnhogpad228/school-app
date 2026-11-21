@@ -6,6 +6,13 @@
     --text: #222222;      /* текст */
     --muted: #777777;     /* второстепенный текст */
     --line: #cccccc;      /* рамки полей и кнопок */
+
+    /* Цвета чата по макету дизайнера — светлая тема */
+    --chat-bg: #c9f1fb;       /* голубой фон чата */
+    --bubble-mine: #f3c99c;   /* мои сообщения — персиковые, справа */
+    --bubble-other: #7fdfbf;  /* чужие сообщения — мятные, слева */
+    --chat-text: #1d1d1d;     /* текст в пузырях */
+    --chat-accent: #d9479a;   /* розовые подписи под пузырями */
 }
 
 /* ===== Тёмная тема: те же переменные, другие цвета ===== */
@@ -15,6 +22,13 @@ body.dark {
     --text: #f1f1f1;
     --muted: #a8a8a8;
     --line: #4a4950;
+
+    /* Цвета чата по макету дизайнера — тёмная тема */
+    --chat-bg: #3e7b80;       /* бирюзовый фон чата */
+    --bubble-mine: #2b4a8c;   /* мои — синие, справа */
+    --bubble-other: #2c2558;  /* чужие — тёмно-фиолетовые, слева */
+    --chat-text: #f4f4f4;     /* светлый текст в пузырях */
+    --chat-accent: #e6d65a;   /* жёлтые подписи под пузырями */
 }
 
 /* ===== Крупный текст: всё приложение чуть больше ===== */
@@ -193,5 +207,55 @@ tr, .rules { color: var(--text); }
 .dm-row a.btn { display: inline-block; }
 .dm-empty { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 .back { display: inline-block; margin-top: 8px; color: var(--main); text-decoration: none; font-weight: bold; }
-.message.mine { border-left: 4px solid var(--main); }
 .dm-row .buttons { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* =====================================================================
+   ЧАТ В СТИЛЕ МЕССЕНДЖЕРА (по макету дизайнера)
+   Мои сообщения — справа, чужие — слева, у каждого пузыря «хвостик»
+   ===================================================================== */
+/* Когда открыт чат кружка или личный чат, вся страница получает цвет фона чата */
+body:has(#chat:target),
+body:has(#dm:target) { background: var(--chat-bg); }
+
+#messages, #dm-messages {
+    display: flex;
+    flex-direction: column;   /* пузыри друг под другом */
+}
+#messages .message, #dm-messages .message {
+    max-width: 80%;
+    border-radius: 22px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    color: var(--chat-text);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);   /* лёгкая «нарисованная» тень снизу */
+}
+/* Чужие — слева, мятные, хвостик снизу слева */
+#messages .message:not(.mine), #dm-messages .message:not(.mine) {
+    align-self: flex-start;
+    background: var(--bubble-other);
+    border-bottom-left-radius: 6px;
+}
+/* Мои — справа, персиковые, хвостик снизу справа */
+#messages .message.mine, #dm-messages .message.mine {
+    align-self: flex-end;
+    background: var(--bubble-mine);
+    border-bottom-right-radius: 6px;
+}
+/* В своём пузыре ник не нужен — и так понятно, что это ты */
+.message.mine > b, .message.mine > .grade { display: none; }
+
+.message .grade { color: var(--chat-text); opacity: 0.7; }
+
+/* Кнопки под текстом — маленькие подписи цвета акцента, как волнистые штрихи на макете */
+#messages .actions button, #dm-messages .actions button {
+    border: none;
+    background: none;
+    padding: 2px 6px 2px 0;
+    color: var(--chat-accent);
+    font-weight: bold;
+    font-size: 12px;
+}
+#messages .actions button:disabled, #dm-messages .actions button:disabled { opacity: 0.8; }
+
+/* Заголовок и предупреждения на цветном фоне чата */
+#chat h1, #dm h1 { color: var(--chat-text); }
