@@ -124,3 +124,5 @@ input {
 .error { color: #c0392b; font-weight: bold; min-height: 1em; }
 /* Кнопка после нажатия (например, «Ты в команде») */
 .btn:disabled { background: #9a9a9a; cursor: default; }
+/* Кнопка выхода — спокойная, не главная */
+.btn.logout { background: none; color: var(--muted); border: 1px solid #ccc; margin-top: 24px; }

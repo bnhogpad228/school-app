@@ -42,17 +42,17 @@
     <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
     <section class="screen" id="chat">
         <h1>Чат: клуб робототехники</h1>
-        <div class="message">
+        <div class="message" id="m1">
             <b>Котик_7Б</b>
             <p>Кто идёт в пятницу на турнир по роботам?</p>
             <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
         </div>
-        <div class="message">
+        <div class="message" id="m2">
             <b>Пиксель_8А</b>
             <p>Я иду! Нужен ещё один человек в команду.</p>
             <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
         </div>
-        <div class="message">
+        <div class="message" id="m3">
             <b>Сова_9В</b>
             <p>Могу помочь с программированием.</p>
             <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
@@ -80,13 +80,13 @@
     <!-- ЭКРАН 5. Инициативы: предложил — собрал людей — сделал -->
     <section class="screen" id="ideas">
         <h1>Инициативы</h1>
-        <div class="card">
+        <div class="card" id="idea1">
             <h2>Покрасим скамейки во дворе</h2>
             <p class="muted">Предложил: Сова_9В</p>
             <p>Участников: <b class="count">3</b></p>
             <button class="btn" onclick="join(this)">Я в деле</button>
         </div>
-        <div class="card">
+        <div class="card" id="idea2">
             <h2>Соберём команду на хакатон</h2>
             <p class="muted">Предложил: Пиксель_8А</p>
             <p>Участников: <b class="count">2</b></p>
@@ -100,6 +100,7 @@
         <div class="event"><b>Турнир 3×3 по баскетболу</b><span>Пятница, 15:00 · спортзал</span></div>
         <div class="event"><b>Посадка деревьев</b><span>Суббота, 11:00 · школьный двор</span></div>
         <div class="event"><b>Клуб настольных игр</b><span>Среда, 16:00 · каб. 204</span></div>
+        <button class="btn logout" onclick="logout()">Выйти и стереть мои данные с телефона</button>
     </section>
 
     <!-- Меню внизу экрана -->
