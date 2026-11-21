@@ -556,7 +556,6 @@ body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club
     font-weight: 600;
 }
 /* Родитель видит кружки ребёнка, но не открывает чаты */
-body.role-parent #clubs-grid .club { pointer-events: none; }
 
 /* ===== Нижнее меню: круглые кнопки с подписью, листается вправо-влево ===== */
 .menu {
