@@ -149,16 +149,37 @@
 
         <div class="card">
             <h2>Общение</h2>
-            <label class="switch-row">
-                <span>Разрешить личные сообщения</span>
-                <input type="checkbox" id="set-private" onchange="changeSettings()">
-            </label>
-            <p class="hint">Личные сообщения возможны, только если оба ученика их разрешили.</p>
+            <p>Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
         <button class="btn logout" onclick="logout()">Выйти</button>
         <button class="btn logout danger-text" onclick="deleteProfile()">Удалить мой профиль с этого телефона</button>
+    </section>
+
+    <!-- ЭКРАН 8. Личные сообщения: запросы и чаты. Каждый чат разрешается отдельно -->
+    <section class="screen" id="private">
+        <h1>Личные сообщения</h1>
+        <p class="hint">Личный чат открывается, только если согласны оба. Согласие можно отозвать кнопкой «Заблокировать».</p>
+        <h2>Запросы мне</h2>
+        <div id="dm-incoming"></div>
+        <h2>Мои запросы</h2>
+        <div id="dm-outgoing"></div>
+        <h2>Чаты</h2>
+        <div id="dm-chats"></div>
+    </section>
+
+    <!-- ЭКРАН 9. Один личный чат -->
+    <section class="screen" id="dm">
+        <a class="back" href="#private">← Личные сообщения</a>
+        <h1 id="dm-title">Личный чат</h1>
+        <div id="dm-messages"></div>
+        <p class="error" id="dm-warning"></p>
+        <div class="send">
+            <input type="text" id="dm-input" placeholder="Сообщение...">
+            <button class="btn small" onclick="sendDm()">Отправить</button>
+        </div>
+        <button class="btn logout danger-text" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
     <!-- Меню внизу экрана -->
@@ -167,6 +188,7 @@
         <a href="#clubs">Кружки</a>
         <a href="#ideas">Идеи</a>
         <a href="#events">События</a>
+        <a href="#private">✉️</a>
         <a href="#settings">⚙️</a>
     </nav>
 

@@ -18,7 +18,8 @@ function emptyState() {
         joined: [],        // id инициатив, где нажал «Я в деле»
         warnings: 0,       // сколько раз нарушил правила
         blocked: false,    // приостановлена ли отправка
-        settings: {dark: false, big: false, privateMessages: false}   // настройки
+        settings: {dark: false, big: false},   // настройки
+        dm: null           // личные чаты (null — ещё не создавались): { "Ник": {status: "...", messages: [...]} }
     };
 }
 let state = emptyState();
@@ -252,13 +253,23 @@ function renderChat() {
 }
 
 // Нарисовать сообщение в чате (используется и при отправке, и при загрузке)
-function addMessageToChat(id, nick, text) {
+// container — куда добавить (чат кружка или личный чат)
+// canWritePrivately — показывать ли кнопку «Написать лично»
+function addMessageToChat(id, nick, text, container = "messages", canWritePrivately = true) {
     let message = document.createElement("div");
     message.className = "message";
     message.id = id;
+    message.dataset.nick = nick;           // запоминаем автора — нужно для «Написать лично»
+    let privateButton = "";
+    if (canWritePrivately && nick !== currentNick) {
+        privateButton = '<button onclick="requestPrivate(this)">Написать лично</button>';
+    }
     message.innerHTML = '<b></b><p></p>' +
         '<div class="actions"><button onclick="hideMessage(this)">Скрыть</button>' +
-        '<button onclick="report(this)">Пожаловаться</button></div>';
+        '<button onclick="report(this)">Пожаловаться</button>' + privateButton + '</div>';
+    if (nick === currentNick) {
+        message.classList.add("mine");     // своё сообщение — с цветной полоской слева
+    }
 
     // Ник и текст вставляем через textContent — так чужой код в сообщении не выполнится
     message.querySelector("b").textContent = nick;
@@ -271,7 +282,7 @@ function addMessageToChat(id, nick, text) {
     message.querySelector("p").textContent = text;
 
     // Добавляем сообщение в конец списка сообщений
-    document.getElementById("messages").append(message);
+    document.getElementById(container).append(message);
     return message;
 }
 
@@ -281,19 +292,7 @@ function sendMessage() {
     if (text === "") {
         return;                            // пустое не отправляем
     }
-    if (state.blocked) {
-        showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
-        return;
-    }
-    if (isRude(text)) {
-        state.warnings += 1;
-        if (state.warnings >= 3) {
-            state.blocked = true;
-            showChatWarning("Третье нарушение правил: отправка сообщений приостановлена.");
-        } else {
-            showChatWarning("Сообщение не отправлено: оно нарушает правила общения. Предупреждение " + state.warnings + " из 3.");
-        }
-        saveState();
+    if (stopRudeOrBlocked(text, showChatWarning)) {
         return;                            // грубое сообщение в чат не попадает
     }
     showChatWarning("");                   // убираем старое предупреждение
@@ -319,6 +318,28 @@ function isRude(text) {
             return true;
         }
     }
+    return false;
+}
+
+// Общая проверка для чата кружка и личного чата.
+// Возвращает true, если отправлять нельзя. showWarning — функция, которая показывает текст.
+function stopRudeOrBlocked(text, showWarning) {
+    if (state.blocked) {
+        showWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
+        return true;
+    }
+    if (isRude(text)) {
+        state.warnings += 1;
+        if (state.warnings >= 3) {
+            state.blocked = true;
+            showWarning("Третье нарушение правил: отправка сообщений приостановлена.");
+        } else {
+            showWarning("Сообщение не отправлено: оно нарушает правила общения. Предупреждение " + state.warnings + " из 3.");
+        }
+        saveState();
+        return true;
+    }
+    showWarning("");                       // убираем старое предупреждение
     return false;
 }
 
@@ -350,13 +371,175 @@ function showJoined(card) {
 }
 
 // =====================================================================
-// НАСТРОЙКИ: тема, крупный текст, личные сообщения
+// ЛИЧНЫЕ СООБЩЕНИЯ: каждый чат разрешается отдельно, только если согласны оба
+// Статусы: "incoming" — мне прислали запрос, "pending" — я отправил запрос,
+//          "allowed" — оба согласны, чат открыт, "blocked" — заблокирован
+// =====================================================================
+let currentDm = "";      // с кем открыт личный чат
+
+function dmOf(nick) {
+    if (!state.dm) {
+        state.dm = {};
+    }
+    return state.dm[nick];
+}
+
+// Нажали «Написать лично» у чужого сообщения
+function requestPrivate(button) {
+    let nick = button.closest(".message").dataset.nick;
+    let dm = dmOf(nick);
+    if (dm && dm.status === "allowed") {
+        openDm(nick);                      // чат уже разрешён — просто открываем
+        return;
+    }
+    if (dm && dm.status === "blocked") {
+        button.textContent = "Ты заблокировал этого ученика";
+        button.disabled = true;
+        return;
+    }
+    if (dm && dm.status === "incoming") {
+        location.hash = "private";         // он уже просил написать тебе — реши в «Личных»
+        return;
+    }
+    state.dm[nick] = {status: "pending", messages: []};
+    saveState();
+    renderPrivate();                       // запрос сразу появляется в «Моих запросах»
+    button.textContent = "Запрос отправлен";
+    button.disabled = true;
+    simulateAnswer(nick);
+}
+
+// В прототипе нет других живых людей, поэтому придуманный собеседник
+// «соглашается» сам через 3 секунды. В настоящей версии он решал бы сам.
+function simulateAnswer(nick) {
+    setTimeout(function () {
+        let dm = dmOf(nick);
+        if (dm && dm.status === "pending") {
+            dm.status = "allowed";
+            dm.messages.push({from: nick, text: "Привет! Да, давай общаться."});
+            saveState();
+            renderPrivate();
+        }
+    }, 3000);
+}
+
+function acceptDm(nick) {
+    dmOf(nick).status = "allowed";
+    saveState();
+    renderPrivate();
+}
+
+function declineDm(nick) {
+    delete state.dm[nick];                 // запрос просто исчезает, собеседник не узнаёт причину
+    saveState();
+    renderPrivate();
+}
+
+function blockDm() {
+    dmOf(currentDm).status = "blocked";
+    saveState();
+    location.hash = "private";
+    renderPrivate();
+}
+
+function unblockDm(nick) {
+    delete state.dm[nick];                 // после разблокировки можно снова отправить запрос
+    saveState();
+    renderPrivate();
+}
+
+// Нарисовать экран «Личные сообщения»
+function renderPrivate() {
+    let incoming = document.getElementById("dm-incoming");
+    let outgoing = document.getElementById("dm-outgoing");
+    let chats = document.getElementById("dm-chats");
+    incoming.innerHTML = "";
+    outgoing.innerHTML = "";
+    chats.innerHTML = "";
+
+    for (let nick in state.dm) {           // как for nick in state["dm"] в Python
+        let dm = state.dm[nick];
+        let row = document.createElement("div");
+        row.className = "dm-row";
+        row.innerHTML = "<b></b><span class='buttons'></span>";
+        row.querySelector("b").textContent = nick;
+        let buttons = row.querySelector(".buttons");
+
+        if (dm.status === "incoming") {
+            buttons.append(makeButton("Разрешить", "btn", function () { acceptDm(nick); }));
+            buttons.append(makeButton("Отклонить", "btn logout", function () { declineDm(nick); }));
+            incoming.append(row);
+        } else if (dm.status === "pending") {
+            buttons.innerHTML = "<span class='status'>ожидает согласия</span>";
+            outgoing.append(row);
+        } else if (dm.status === "allowed") {
+            buttons.append(makeButton("Открыть чат", "btn", function () { openDm(nick); }));
+            chats.append(row);
+        } else if (dm.status === "blocked") {
+            buttons.append(makeButton("Разблокировать", "btn logout", function () { unblockDm(nick); }));
+            chats.append(row);
+        }
+    }
+    for (let box of [incoming, outgoing, chats]) {
+        if (box.innerHTML === "") {
+            box.innerHTML = "<p class='dm-empty'>Пока пусто</p>";
+        }
+    }
+}
+
+// Создать кнопку с действием (так безопаснее, чем вставлять ник в onclick)
+function makeButton(text, className, action) {
+    let button = document.createElement("button");
+    button.textContent = text;
+    button.className = className;
+    button.onclick = action;
+    return button;
+}
+
+// Открыть личный чат
+function openDm(nick) {
+    currentDm = nick;
+    document.getElementById("dm-title").textContent = "✉️ " + nick;
+    document.getElementById("dm-messages").innerHTML = "";
+    let messages = dmOf(nick).messages;
+    for (let i = 0; i < messages.length; i++) {
+        let id = "dm-" + nick + "-" + i;
+        let message = addMessageToChat(id, messages[i].from, messages[i].text, "dm-messages", false);
+        if (state.hidden.includes(id)) {
+            showHidden(message);
+        } else if (state.reported.includes(id)) {
+            showReported(message.querySelectorAll(".actions button")[1]);
+        }
+    }
+    document.getElementById("dm-warning").textContent = "";
+    location.hash = "dm";
+}
+
+// Отправить сообщение в личный чат
+function sendDm() {
+    let input = document.getElementById("dm-input");
+    let text = input.value.trim();
+    let dm = dmOf(currentDm);
+    if (text === "" || !dm || dm.status !== "allowed") {
+        return;
+    }
+    let showDmWarning = function (t) { document.getElementById("dm-warning").textContent = t; };
+    if (stopRudeOrBlocked(text, showDmWarning)) {
+        return;
+    }
+    dm.messages.push({from: currentNick, text: text});
+    saveState();
+    addMessageToChat("dm-" + currentDm + "-" + (dm.messages.length - 1), currentNick, text, "dm-messages", false);
+    input.value = "";
+}
+
+// =====================================================================
+// НАСТРОЙКИ: тема и крупный текст
 // =====================================================================
 // Человек переключил галочку — читаем все галочки и сохраняем
 function changeSettings() {
     state.settings.dark = document.getElementById("set-dark").checked;     // checked — стоит ли галочка
     state.settings.big = document.getElementById("set-big").checked;
-    state.settings.privateMessages = document.getElementById("set-private").checked;
     saveState();
     applySettings();
 }
@@ -369,7 +552,6 @@ function applySettings() {
     // Галочки на экране настроек ставим так, как сохранено
     document.getElementById("set-dark").checked = state.settings.dark;
     document.getElementById("set-big").checked = state.settings.big;
-    document.getElementById("set-private").checked = state.settings.privateMessages;
 }
 
 // Заполнить «Мой профиль»
@@ -397,6 +579,9 @@ if (currentNick === "") {
 } else {
     state = users[currentNick].state;
     restoreScreen();
+    if (location.hash === "#dm") {
+        location.hash = "private";         // после перезагрузки возвращаемся к списку личных чатов
+    }
 }
 
 // Экраны, которые можно открыть без входа
@@ -408,6 +593,8 @@ function isOpenScreen() {
 window.addEventListener("hashchange", function () {
     if (currentNick === "" && !isOpenScreen()) {
         location.hash = "login";
+    } else if (location.hash === "#dm" && currentDm === "") {
+        location.hash = "private";         // личный чат открывается только из списка
     }
 });
 
@@ -415,10 +602,18 @@ window.addEventListener("hashchange", function () {
 function restoreScreen() {
     // У старых профилей настроек ещё нет — добавляем по умолчанию
     if (!state.settings) {
-        state.settings = {dark: false, big: false, privateMessages: false};
+        state.settings = {dark: false, big: false};
     }
     applySettings();
     showProfile();
+    // Для показа: один придуманный ученик уже просит написать тебе лично
+    if (!state.dm) {
+        state.dm = {"Скрипка_7В": {status: "incoming", messages: [
+            {from: "Скрипка_7В", text: "Привет! Ты тоже хочешь в группу к концерту?"}
+        ]}};
+        saveState();
+    }
+    renderPrivate();
 
     // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
     renderChat();

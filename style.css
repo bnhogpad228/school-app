@@ -175,3 +175,23 @@ select {
 .danger-text { color: #c0392b !important; }
 .actions button { color: var(--text); }
 tr, .rules { color: var(--text); }
+
+/* ===== Личные сообщения ===== */
+#private h2 { margin-top: 20px; }
+.dm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.dm-row .btn { width: auto; margin: 0; padding: 8px 14px; font-size: 14px; }
+.dm-row .status { color: var(--muted); font-size: 13px; }
+.dm-row a.btn { display: inline-block; }
+.dm-empty { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
+.back { display: inline-block; margin-top: 8px; color: var(--main); text-decoration: none; font-weight: bold; }
+.message.mine { border-left: 4px solid var(--main); }
+.dm-row .buttons { display: flex; gap: 6px; flex-shrink: 0; }
