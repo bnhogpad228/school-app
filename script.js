@@ -359,18 +359,27 @@ function warningFor(message) {
     return function (text) { document.getElementById(id).textContent = text; };
 }
 
-// Нажали «Удалить» — вместо кнопок показываем развилку
+// Нажали «Удалить» — посередине экрана открывается окно с выбором
+let messageToDelete = null;          // какое сообщение собираемся удалить
+
 function askDelete(button) {
-    let actions = button.closest(".actions");
-    actions.innerHTML = '<span class="ask">Удалить сообщение?</span>' +
-        '<button onclick="deleteMessage(this, true)">У всех</button>' +
-        '<button onclick="deleteMessage(this, false)">У себя</button>' +
-        '<button class="cancel" onclick="cancelAction(this)">Отмена</button>';
+    messageToDelete = button.closest(".message");
+    document.getElementById("delete-dialog").classList.add("open");
+}
+
+// Закрыть окно (кнопка «Отмена», нажатие мимо окна или клавиша Esc)
+function closeDeleteDialog() {
+    messageToDelete = null;
+    document.getElementById("delete-dialog").classList.remove("open");
 }
 
 // forAll = true — удалить у всех, false — только у себя
-function deleteMessage(button, forAll) {
-    let message = button.closest(".message");
+function deleteMessage(forAll) {
+    let message = messageToDelete;
+    closeDeleteDialog();
+    if (!message) {
+        return;
+    }
     let data = myMessageData(message.id);
     if (forAll) {
         data.deleted = true;               // все увидят «Сообщение удалено»
@@ -384,10 +393,11 @@ function deleteMessage(button, forAll) {
     }
 }
 
-// Отмена — возвращаем обычные кнопки «Изменить» и «Удалить»
-function cancelAction(button) {
-    button.closest(".actions").innerHTML = MY_ACTIONS;
-}
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+        closeDeleteDialog();
+    }
+});
 
 // Нажали «Изменить» — текст сообщения превращается в поле ввода
 function editMessage(button) {

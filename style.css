@@ -8,6 +8,12 @@
 
 /* ===== Шрифт Montserrat лежит прямо в папке fonts — не зависит от Google и работает без VPN ===== */
 @font-face {
+    font-family: "Fira Sans";            /* шрифт кнопок во всплывающем окне */
+    src: url("fonts/FiraSans-SemiBold.woff") format("woff");
+    font-weight: 600;
+    font-display: swap;
+}
+@font-face {
     font-family: "Montserrat";
     src: url("fonts/Montserrat.woff") format("woff");
     font-weight: 100 900;      /* один файл на все толщины: от тонкого до жирного */
@@ -385,4 +391,46 @@ body:has(#register:target) { background: var(--login-bg); }
 /* Кнопки «Разрешить / Отклонить» переносятся на маленьких экранах */
 .dm-row { flex-wrap: wrap; }
 .event .mine-tag { display: inline; color: var(--main); margin-left: 6px; }
-.actions button.cancel { display: block; margin-top: 4px; }   /* «Отмена» — отдельной строкой под вариантами удаления */
+
+/* ===== Всплывающее окно «Удалить сообщение?» ===== */
+.dialog-bg {
+    display: none;                     /* пока не нажали «Удалить» — окна нет */
+    position: fixed;
+    inset: 0;                          /* на весь экран */
+    z-index: 100;                      /* поверх меню и всего остального */
+    background: rgba(0, 0, 0, 0.5);    /* затемнение под окном */
+    align-items: center;               /* окно — ровно посередине */
+    justify-content: center;
+    padding: 16px;
+}
+.dialog-bg.open { display: flex; }
+.dialog {
+    width: 100%;
+    max-width: 320px;
+    background: var(--card);
+    color: var(--text);
+    border-radius: 24px;
+    padding: 22px 20px 14px;
+    text-align: center;
+}
+.dialog h2 { font-size: 20px; margin: 0 0 6px; }
+.dialog .hint { margin: 0 0 8px; }
+/* Кнопки — овалы. Весь овал — зона нажатия, высота 48px (удобно попадать пальцем) */
+.dialog-btn {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 10px;
+    border: 2px solid var(--text);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    font-family: "Fira Sans", "Montserrat", sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.dialog-btn.danger { background: #b8442a; border-color: #b8442a; color: #ffffff; }
+.dialog-btn.plain { border-color: transparent; }
+.dialog-btn:active { transform: scale(0.96); opacity: 0.8; }

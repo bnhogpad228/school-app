@@ -221,6 +221,17 @@
         <button class="btn logout danger-text" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
+    <!-- Окно «Удалить сообщение?» — появляется посередине экрана -->
+    <div class="dialog-bg" id="delete-dialog" onclick="if (event.target === this) closeDeleteDialog()">
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+            <h2 id="delete-title">Удалить сообщение?</h2>
+            <p class="hint">«У всех» — вместо текста все увидят «Сообщение удалено».</p>
+            <button class="dialog-btn danger" onclick="deleteMessage(true)">Удалить у всех</button>
+            <button class="dialog-btn" onclick="deleteMessage(false)">Удалить у себя</button>
+            <button class="dialog-btn plain" onclick="closeDeleteDialog()">Отмена</button>
+        </div>
+    </div>
+
     <!-- Меню внизу экрана -->
     <nav class="menu">
         <a href="#chat">Чат</a>
