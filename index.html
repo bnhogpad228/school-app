@@ -122,8 +122,43 @@
         <div class="event"><b>Турнир 3×3 по баскетболу</b><span>Пятница, 15:00 · спортзал</span></div>
         <div class="event"><b>Посадка деревьев</b><span>Суббота, 11:00 · школьный двор</span></div>
         <div class="event"><b>Клуб настольных игр</b><span>Среда, 16:00 · каб. 204</span></div>
+    </section>
+
+    <!-- ЭКРАН 7. Настройки -->
+    <section class="screen" id="settings">
+        <h1>Настройки</h1>
+
+        <div class="card">
+            <h2>Мой профиль</h2>
+            <p>Ник: <b id="profile-nick"></b></p>
+            <p>Класс: <b id="profile-grade"></b></p>
+            <p class="hint">Мы не храним фамилию, телефон и геолокацию.</p>
+        </div>
+
+        <div class="card">
+            <h2>Оформление</h2>
+            <label class="switch-row">
+                <span>Тёмная тема</span>
+                <input type="checkbox" id="set-dark" onchange="changeSettings()">
+            </label>
+            <label class="switch-row">
+                <span>Крупный текст</span>
+                <input type="checkbox" id="set-big" onchange="changeSettings()">
+            </label>
+        </div>
+
+        <div class="card">
+            <h2>Общение</h2>
+            <label class="switch-row">
+                <span>Разрешить личные сообщения</span>
+                <input type="checkbox" id="set-private" onchange="changeSettings()">
+            </label>
+            <p class="hint">Личные сообщения возможны, только если оба ученика их разрешили.</p>
+            <a class="btn second" href="#rules">Правила общения</a>
+        </div>
+
         <button class="btn logout" onclick="logout()">Выйти</button>
-        <button class="btn logout" onclick="deleteProfile()">Удалить мой профиль с этого телефона</button>
+        <button class="btn logout danger-text" onclick="deleteProfile()">Удалить мой профиль с этого телефона</button>
     </section>
 
     <!-- Меню внизу экрана -->
@@ -132,6 +167,7 @@
         <a href="#clubs">Кружки</a>
         <a href="#ideas">Идеи</a>
         <a href="#events">События</a>
+        <a href="#settings">⚙️</a>
     </nav>
 
 </div>

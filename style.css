@@ -5,7 +5,20 @@
     --card: #ffffff;      /* карточки */
     --text: #222222;      /* текст */
     --muted: #777777;     /* второстепенный текст */
+    --line: #cccccc;      /* рамки полей и кнопок */
 }
+
+/* ===== Тёмная тема: те же переменные, другие цвета ===== */
+body.dark {
+    --bg: #1c1b1f;
+    --card: #2b2a30;
+    --text: #f1f1f1;
+    --muted: #a8a8a8;
+    --line: #4a4950;
+}
+
+/* ===== Крупный текст: всё приложение чуть больше ===== */
+body.big .app { zoom: 1.15; }
 
 * { box-sizing: border-box; }
 
@@ -43,10 +56,12 @@ h2 { font-size: 18px; margin: 0 0 8px; }
 /* ===== Поля и кнопки ===== */
 label { display: block; margin: 12px 0; font-weight: bold; }
 input {
+    background: var(--card);
+    color: var(--text);
     width: 100%;
     padding: 12px;
     margin-top: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--line);
     border-radius: 12px;
     font-size: 16px;
 }
@@ -79,7 +94,7 @@ input {
 .message p { margin: 6px 0; }
 .actions button {
     background: none;
-    border: 1px solid #ccc;
+    border: 1px solid var(--line);
     border-radius: 12px;
     padding: 4px 10px;
     margin-right: 6px;
@@ -119,7 +134,7 @@ input {
     display: flex;
     justify-content: space-around;
     background: var(--card);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--line);
     padding: 12px 0;
 }
 .menu a { color: var(--text); text-decoration: none; font-weight: bold; }
@@ -129,7 +144,7 @@ input {
 /* Кнопка после нажатия (например, «Ты в команде») */
 .btn:disabled { background: #9a9a9a; cursor: default; }
 /* Кнопка выхода — спокойная, не главная */
-.btn.logout { background: none; color: var(--muted); border: 1px solid #ccc; margin-top: 24px; }
+.btn.logout { background: none; color: var(--muted); border: 1px solid var(--line); margin-top: 24px; }
 /* Вторая кнопка на входе — «Зарегистрироваться» */
 .btn.second { background: var(--card); color: var(--main); border: 2px solid var(--main); }
 
@@ -140,9 +155,23 @@ input {
 select {
     flex: 1;
     padding: 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--line);
     border-radius: 12px;
     font-size: 16px;
-    background: white;
+    background: var(--card);
+    color: var(--text);
 }
 .message .grade { color: var(--muted); font-weight: normal; font-size: 13px; }
+
+/* ===== Настройки ===== */
+.switch-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: normal;
+    margin: 10px 0;
+}
+.switch-row input { width: 22px; height: 22px; margin: 0; }
+.danger-text { color: #c0392b !important; }
+.actions button { color: var(--text); }
+tr, .rules { color: var(--text); }

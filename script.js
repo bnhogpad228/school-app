@@ -17,7 +17,8 @@ function emptyState() {
         reported: [],      // id сообщений, на которые пожаловался
         joined: [],        // id инициатив, где нажал «Я в деле»
         warnings: 0,       // сколько раз нарушил правила
-        blocked: false     // приостановлена ли отправка
+        blocked: false,    // приостановлена ли отправка
+        settings: {dark: false, big: false, privateMessages: false}   // настройки
     };
 }
 let state = emptyState();
@@ -349,6 +350,35 @@ function showJoined(card) {
 }
 
 // =====================================================================
+// НАСТРОЙКИ: тема, крупный текст, личные сообщения
+// =====================================================================
+// Человек переключил галочку — читаем все галочки и сохраняем
+function changeSettings() {
+    state.settings.dark = document.getElementById("set-dark").checked;     // checked — стоит ли галочка
+    state.settings.big = document.getElementById("set-big").checked;
+    state.settings.privateMessages = document.getElementById("set-private").checked;
+    saveState();
+    applySettings();
+}
+
+// Применить настройки к странице
+function applySettings() {
+    // classList.toggle("dark", true) добавляет класс, с false — убирает
+    document.body.classList.toggle("dark", state.settings.dark);
+    document.body.classList.toggle("big", state.settings.big);
+    // Галочки на экране настроек ставим так, как сохранено
+    document.getElementById("set-dark").checked = state.settings.dark;
+    document.getElementById("set-big").checked = state.settings.big;
+    document.getElementById("set-private").checked = state.settings.privateMessages;
+}
+
+// Заполнить «Мой профиль»
+function showProfile() {
+    document.getElementById("profile-nick").textContent = currentNick;
+    document.getElementById("profile-grade").textContent = users[currentNick].grade || "—";
+}
+
+// =====================================================================
 // ПРИ ОТКРЫТИИ СТРАНИЦЫ: восстановить всё из памяти телефона
 // =====================================================================
 loadUsers();
@@ -383,6 +413,12 @@ window.addEventListener("hashchange", function () {
 
 // Восстановить экран из данных пользователя
 function restoreScreen() {
+    // У старых профилей настроек ещё нет — добавляем по умолчанию
+    if (!state.settings) {
+        state.settings = {dark: false, big: false, privateMessages: false};
+    }
+    applySettings();
+    showProfile();
 
     // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
     renderChat();
