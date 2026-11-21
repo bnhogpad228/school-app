@@ -1,3 +1,11 @@
+/* ===== Шрифт Montserrat лежит прямо в папке fonts — не зависит от Google и работает без VPN ===== */
+@font-face {
+    font-family: "Montserrat";
+    src: url("fonts/Montserrat.woff") format("woff");
+    font-weight: 100 900;      /* один файл на все толщины: от тонкого до жирного */
+    font-display: swap;        /* пока шрифт грузится, текст показывается обычным шрифтом */
+}
+
 /* ===== Цвета — их легко поменять под дизайн команды ===== */
 :root {
     --main: #e5532d;      /* основной цвет (кнопки) */
@@ -36,9 +44,13 @@ body.big .app { zoom: 1.15; }
 
 * { box-sizing: border-box; }
 
+/* Кнопки и поля по умолчанию не наследуют шрифт — заставляем */
+button, input, select { font-family: inherit; }
+h1 { font-weight: 800; }
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: "Montserrat", Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
 }
