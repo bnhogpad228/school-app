@@ -601,3 +601,18 @@ body.dark .menu a.active i { background: #2e8a6a; border-color: #ffffff; }
     border: 2px solid var(--card);
 }
 .unread { color: #e53935; font-weight: 700; font-size: 13px; }
+/* ===== Выбор роли — крупные плитки с отступами, чтобы сразу бросались в глаза ===== */
+.role-question { color: var(--login-text); font-size: 20px; font-weight: 700; margin: 22px 0 10px; }
+.role-pick { gap: 10px; margin: 0 0 12px; }
+.role-pick span {
+    min-height: 84px; line-height: 1.2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    border-radius: 20px;
+    border: 3px solid transparent;
+    font-size: 16px;
+}
+.role-pick span i { font-style: normal; font-size: 28px; }
+.role-pick label { min-width: 0; }                                  /* плитки сжимаются на узком экране */
+.role-pick span { padding: 0 4px; font-size: min(16px, 4.3vw); }
+.role-pick input:checked + span { border-color: var(--login-text); transform: scale(1.04); }
+#role-about { margin: 4px 0 18px; font-size: 14px; }

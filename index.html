@@ -54,10 +54,11 @@
     <section class="screen" id="register">
         <h1>Регистрация</h1>
         <!-- Кто регистрируется: у каждой роли свои возможности -->
+        <p class="role-question">Кто регистрируется?</p>
         <div class="role-pick">
-            <label><input type="radio" name="role" value="student" checked onchange="changeRole()"><span>Ученик</span></label>
-            <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span>Учитель</span></label>
-            <label><input type="radio" name="role" value="parent" onchange="changeRole()"><span>Родитель</span></label>
+            <label><input type="radio" name="role" value="student" checked onchange="changeRole()"><span><i>🎒</i>Ученик</span></label>
+            <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span><i>📚</i>Учитель</span></label>
+            <label><input type="radio" name="role" value="parent" onchange="changeRole()"><span><i>👨‍👩‍👧</i>Родитель</span></label>
         </div>
         <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
         <label><span id="reg-code-label">Код школы</span>
