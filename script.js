@@ -1328,6 +1328,7 @@ function makeButton(text, className, action) {
 // Открыть личный чат
 function openDm(nick) {
     currentDm = nick;
+    document.getElementById("dm-typing").hidden = true;
     document.getElementById("dm-block").hidden = false;
     document.getElementById("dm-title").textContent = "✉️ " + nick;
     document.getElementById("dm-messages").innerHTML = "";
@@ -1386,7 +1387,18 @@ function autoReply(nick, text) {
         let answers = ["Ага, понял 👍", "Классно!", "Давай!", "Ок, договорились", "Ха-ха 😄", "А ты в каком кружке?"];
         answer = answers[dmOf(nick).messages.length % answers.length];   // % — остаток от деления, как в Python
     }
+    // Как в настоящем мессенджере: собеседник сначала «читает», потом «печатает», потом отвечает
+    let readTime = 1000 + Math.random() * 1000;            // 1–2 секунды на прочтение
+    let typeTime = 2000 + Math.random() * 1500;            // 2–3,5 секунды «печатает…»
     setTimeout(function () {
+        if (location.hash === "#dm" && currentDm === nick) {
+            let typing = document.getElementById("dm-typing");
+            typing.textContent = nick + " печатает…";
+            typing.hidden = false;
+        }
+    }, readTime);
+    setTimeout(function () {
+        document.getElementById("dm-typing").hidden = true;
         let dm = dmOf(nick);
         if (currentNick !== me || !dm || dm.status !== "allowed") {
             return;                        // вышли из профиля или заблокировали — не отвечаем
@@ -1400,7 +1412,7 @@ function autoReply(nick, text) {
             updateBadge();                 // вышел из чата — на «Сообщениях» появится красный кружок
             renderPrivate();
         }
-    }, 1500);
+    }, readTime + typeTime);
 }
 
 // =====================================================================

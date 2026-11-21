@@ -615,3 +615,6 @@ body.dark .menu a.active i { background: #2e8a6a; border-color: #ffffff; }
 .role-pick span { padding: 0 4px; font-size: min(16px, 4.3vw); }
 .role-pick input:checked + span { border-color: var(--login-text); transform: scale(1.04); }
 #role-about { margin: 4px 0 18px; font-size: 14px; }
+
+/* «Скрипка_7В печатает…» в личном чате */
+.typing { color: var(--chat-text); opacity: 0.8; font-style: italic; font-size: 14px; margin: 4px 0 8px; }
