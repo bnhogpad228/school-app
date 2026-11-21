@@ -96,7 +96,28 @@
     <!-- ЭКРАН 4. Кружки по интересам -->
     <section class="screen" id="clubs">
         <h1>Кружки и классы</h1>
-        <div class="grid">
+        <details class="new-form">
+            <summary class="btn second">+ Создать кружок</summary>
+            <label>Название
+                <input type="text" id="club-name" maxlength="30" placeholder="Например, Шахматы">
+            </label>
+            <p class="pick-title">Значок</p>
+            <div class="icon-pick">
+                <label><input type="radio" name="club-icon" value="🎨" checked><span>🎨</span></label>
+                <label><input type="radio" name="club-icon" value="⚽"><span>⚽</span></label>
+                <label><input type="radio" name="club-icon" value="🎮"><span>🎮</span></label>
+                <label><input type="radio" name="club-icon" value="🎭"><span>🎭</span></label>
+                <label><input type="radio" name="club-icon" value="♟️"><span>♟️</span></label>
+                <label><input type="radio" name="club-icon" value="🧪"><span>🧪</span></label>
+                <label><input type="radio" name="club-icon" value="💃"><span>💃</span></label>
+                <label><input type="radio" name="club-icon" value="🎬"><span>🎬</span></label>
+                <label><input type="radio" name="club-icon" value="🌍"><span>🌍</span></label>
+                <label><input type="radio" name="club-icon" value="🐾"><span>🐾</span></label>
+            </div>
+            <p class="error" id="club-warning"></p>
+            <button class="btn" onclick="addClub()">Создать</button>
+        </details>
+        <div class="grid" id="clubs-grid">
             <a class="club" href="#chat" onclick="openClub('class')"><span class="circle c0">🏫</span><span id="class-label">Мой класс</span></a>
             <a class="club" href="#chat" onclick="openClub('music')"><span class="circle c1">🎵</span>Музыка</a>
             <a class="club" href="#chat" onclick="openClub('basketball')"><span class="circle c2">🏀</span>Баскетбол</a>

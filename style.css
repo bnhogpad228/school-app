@@ -434,3 +434,21 @@ body:has(#register:target) { background: var(--login-bg); }
 .dialog-btn.danger { background: #b8442a; border-color: #b8442a; color: #ffffff; }
 .dialog-btn.plain { border-color: transparent; }
 .dialog-btn:active { transform: scale(0.96); opacity: 0.8; }
+
+/* ===== Создание своего кружка ===== */
+.pick-title { font-weight: bold; margin: 12px 0 6px; }
+.icon-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.icon-pick label { display: inline-block; margin: 0; }
+.icon-pick input { position: absolute; opacity: 0; width: 0; height: 0; }   /* сам кружок-переключатель прячем */
+.icon-pick span {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;              /* зона нажатия 44px */
+    border-radius: 50%;
+    font-size: 22px;
+    background: var(--bg);
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.icon-pick input:checked + span { border-color: var(--main); }   /* выбранный значок — в рамке */
+.c-new { background: #8a6fd1; }                                    /* цвет своих кружков */
+.empty-hint { color: var(--chat-text); opacity: 0.85; text-align: center; margin: 24px 0; }

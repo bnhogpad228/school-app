@@ -15,6 +15,7 @@ function emptyState() {
         myMessages: [],    // свои сообщения
         myIdeas: [],       // свои инициативы
         myEvents: [],      // свои события
+        myClubs: [],       // кружки, которые создал сам
         hidden: [],        // id скрытых сообщений
         reported: [],      // id сообщений, на которые пожаловался
         joined: [],        // id инициатив, где нажал «Я в деле»
@@ -84,6 +85,10 @@ function register() {
     }
     if (users[nick]) {
         error.textContent = "Такой ник уже занят — придумай другой";
+        return;
+    }
+    if (isRude(nick)) {                    // фильтр грубых слов — и для ника тоже
+        error.textContent = "Такой ник нарушает правила общения — придумай другой";
         return;
     }
     if (grade === "" || letter === "") {
@@ -257,6 +262,14 @@ function renderChat() {
         }
     }
 
+    // Новый кружок без сообщений — подсказываем написать первым
+    if (document.getElementById("messages").children.length === 0) {
+        let hint = document.createElement("p");
+        hint.className = "empty-hint";
+        hint.textContent = "Здесь пока пусто. Напиши первое сообщение — позови людей в кружок!";
+        document.getElementById("messages").append(hint);
+    }
+
     // Скрытые и пожалованные сообщения отмечаем снова
     for (let message of document.querySelectorAll("#messages .message")) {
         if (state.hidden.includes(message.id)) {
@@ -314,6 +327,10 @@ function sendMessage() {
         return;                            // грубое сообщение в чат не попадает
     }
     showChatWarning("");                   // убираем старое предупреждение
+    let hint = document.querySelector("#messages .empty-hint");
+    if (hint) {
+        hint.remove();                     // первое сообщение в пустом кружке — подсказка больше не нужна
+    }
 
     state.myMessages.push({club: currentClub, text: text});   // запоминаем, в какой кружок отправили
     saveState();
@@ -478,7 +495,7 @@ function stopRudeOrBlocked(text, showWarning) {
             state.blocked = true;
             showWarning("Третье нарушение правил: отправка сообщений приостановлена.");
         } else {
-            showWarning("Сообщение не отправлено: оно нарушает правила общения. Предупреждение " + state.warnings + " из 3.");
+            showWarning("Не отправлено: текст нарушает правила общения. Предупреждение " + state.warnings + " из 3.");
         }
         saveState();
         return true;
@@ -578,6 +595,55 @@ function drawMyEvent(i) {
     div.querySelector("b").textContent = ev.title;
     div.querySelector("span").textContent = ev.when + (ev.place ? " · " + ev.place : "");
     document.getElementById("my-events").prepend(div);
+}
+
+// =====================================================================
+// СВОИ КРУЖКИ: любой ученик может создать кружок по интересам
+// =====================================================================
+function addClub() {
+    let name = document.getElementById("club-name").value.trim();
+    let icon = document.querySelector('input[name="club-icon"]:checked').value;
+    let warn = function (t) { document.getElementById("club-warning").textContent = t; };
+    if (name === "") {
+        warn("Напиши название кружка");
+        return;
+    }
+    // Такой кружок уже есть? Сравниваем маленькими буквами: «Шахматы» = «шахматы»
+    for (let id in CLUBS) {
+        if (CLUBS[id].name.toLowerCase() === name.toLowerCase()) {
+            warn("Такой кружок уже есть — загляни в него");
+            return;
+        }
+    }
+    if (stopRudeOrBlocked(name, warn)) {
+        return;                            // название тоже проходит фильтр
+    }
+    state.myClubs.push({name: name, icon: icon});
+    saveState();
+    let id = drawMyClub(state.myClubs.length - 1);
+    document.getElementById("club-name").value = "";
+    document.querySelector("#clubs .new-form").open = false;
+    openClub(id);                          // сразу открываем чат нового кружка
+    location.hash = "chat";
+}
+
+// Добавить свой кружок в список и в сетку кружков. Возвращает его id (myclub0, myclub1...)
+function drawMyClub(i) {
+    let club = state.myClubs[i];
+    let id = "myclub" + i;
+    CLUBS[id] = {name: club.name, icon: club.icon, messages: []};
+    let link = document.createElement("a");
+    link.className = "club";
+    link.href = "#chat";
+    link.onclick = function () { openClub(id); };
+    let circle = document.createElement("span");
+    circle.className = "circle c-new";
+    circle.textContent = club.icon;
+    let title = document.createElement("span");
+    title.textContent = club.name;         // textContent — безопасно
+    link.append(circle, title);
+    document.getElementById("clubs-grid").append(link);
+    return id;
 }
 
 // =====================================================================
@@ -826,11 +892,13 @@ function restoreScreen() {
     // У старых профилей этих списков ещё нет
     if (!state.myIdeas) { state.myIdeas = []; }
     if (!state.myEvents) { state.myEvents = []; }
+    if (!state.myClubs) { state.myClubs = []; }
     applySettings();
     showProfile();
     setupClassChat();
     for (let i = 0; i < state.myIdeas.length; i++) { drawMyIdea(i); }
     for (let i = 0; i < state.myEvents.length; i++) { drawMyEvent(i); }
+    for (let i = 0; i < state.myClubs.length; i++) { drawMyClub(i); }
     // Для показа: один придуманный ученик уже просит написать тебе лично
     if (!state.dm) {
         state.dm = {"Скрипка_7В": {status: "incoming", messages: [
