@@ -15,13 +15,15 @@
         <h1>Школьный двор</h1>
         <p class="muted">Приложение для учеников школы. Вход только по коду, который выдаёт классный руководитель.</p>
         <label>Код школы
-            <input type="text" placeholder="Например, 1234">
+            <input type="text" id="code" placeholder="Например, 1234">
         </label>
         <label>Ник (не фамилия!)
-            <input type="text" placeholder="Например, Котик_7Б">
+            <input type="text" id="nick" placeholder="Например, Котик_7Б">
         </label>
         <p class="hint">Мы не спрашиваем фамилию, телефон и геолокацию.</p>
-        <a class="btn" href="#rules">Войти</a>
+        <p class="error" id="login-error"></p>
+        <button class="btn" onclick="login()">Войти</button>
+        <p class="hint">Код для проверки: 1234</p>
     </section>
 
     <!-- ЭКРАН 2. Правила общения — первый экран после входа -->
@@ -56,8 +58,8 @@
             <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
         </div>
         <div class="send">
-            <input type="text" placeholder="Сообщение...">
-            <button class="btn small">Отправить</button>
+            <input type="text" id="new-message" placeholder="Сообщение...">
+            <button class="btn small" onclick="sendMessage()">Отправить</button>
         </div>
     </section>
 
@@ -80,14 +82,14 @@
         <div class="card">
             <h2>Покрасим скамейки во дворе</h2>
             <p class="muted">Предложил: Сова_9В</p>
-            <p>Участников: <b>3</b></p>
-            <button class="btn">Я в деле</button>
+            <p>Участников: <b class="count">3</b></p>
+            <button class="btn" onclick="join(this)">Я в деле</button>
         </div>
         <div class="card">
             <h2>Соберём команду на хакатон</h2>
             <p class="muted">Предложил: Пиксель_8А</p>
-            <p>Участников: <b>2</b></p>
-            <button class="btn">Я в деле</button>
+            <p>Участников: <b class="count">2</b></p>
+            <button class="btn" onclick="join(this)">Я в деле</button>
         </div>
     </section>
 

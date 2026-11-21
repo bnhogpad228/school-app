@@ -119,3 +119,8 @@ input {
     padding: 12px 0;
 }
 .menu a { color: var(--text); text-decoration: none; font-weight: bold; }
+
+/* Сообщение об ошибке на входе */
+.error { color: #c0392b; font-weight: bold; min-height: 1em; }
+/* Кнопка после нажатия (например, «Ты в команде») */
+.btn:disabled { background: #9a9a9a; cursor: default; }
