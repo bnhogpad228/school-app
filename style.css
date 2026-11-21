@@ -662,3 +662,4 @@ body.dark #clubs .circle .icon { color: #10232a; }   /* тёмная тема: �
 #clubs .new-form input[type="text"]::placeholder { color: var(--login-placeholder); }
 #clubs .new-form .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
 #clubs .icon-pick span { background: var(--login-field); }
+#clubs .icon-pick input:checked + span { border-color: var(--login-text); }
