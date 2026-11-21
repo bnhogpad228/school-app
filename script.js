@@ -41,6 +41,21 @@ function sendMessage() {
     if (text === "") {
         return;                            // пустое не отправляем
     }
+    if (blocked) {
+        showChatWarning("Отправка сообщений приостановлена. Модератор рассмотрит ситуацию.");
+        return;
+    }
+    if (isRude(text)) {
+        warnings += 1;
+        if (warnings >= 3) {
+            blocked = true;
+            showChatWarning("Третье нарушение правил: отправка сообщений приостановлена.");
+        } else {
+            showChatWarning("Сообщение не отправлено: оно нарушает правила общения. Предупреждение " + warnings + " из 3.");
+        }
+        return;                            // грубое сообщение в чат не попадает
+    }
+    showChatWarning("");                   // убираем старое предупреждение
 
     // Создаём новый блок сообщения
     let message = document.createElement("div");
@@ -67,4 +82,25 @@ function join(button) {
     count.textContent = Number(count.textContent) + 1;   // Number() — как int() в Python
     button.textContent = "Ты в команде";
     button.disabled = true;
+}
+
+// ===== Фильтр грубых слов =====
+// В прототипе — мягкие слова для показа. В настоящей версии список хранился бы на сервере.
+const RUDE_WORDS = ["дурак", "дура", "тупой", "тупая", "идиот", "лох", "урод", "заткнись"];
+let warnings = 0;      // сколько раз нарушил
+let blocked = false;   // заблокирована ли отправка
+
+function isRude(text) {
+    // Приводим к маленьким буквам и заменяем ё на е, чтобы «ДУРАК» и «дурак» ловились одинаково
+    let clean = text.toLowerCase().replaceAll("ё", "е");
+    for (let word of RUDE_WORDS) {         // как for word in RUDE_WORDS в Python
+        if (clean.includes(word)) {        // includes — как in для строк в Python
+            return true;
+        }
+    }
+    return false;
+}
+
+function showChatWarning(text) {
+    document.getElementById("chat-warning").textContent = text;
 }
