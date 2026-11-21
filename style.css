@@ -540,3 +540,20 @@ body:not(.role-student) #events .go { display: none; }
 #clubs-grid .club:nth-child(4n+2) .circle, #clubs-grid .club:nth-child(4n+3) .circle { background: #7fdfbf; }
 body.dark #clubs-grid .club:nth-child(4n+1) .circle, body.dark #clubs-grid .club:nth-child(4n+4) .circle { background: #4f97a6; }
 body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club:nth-child(4n+3) .circle { background: #2e8a6a; }
+
+/* ===== Объявления класса ===== */
+#announcements-box h2 { margin-top: 4px; }
+.announcement { border-left: 5px solid var(--main); }
+.announcement .ann-text { font-size: 16px; margin: 6px 0; }
+.announcement .btn.small { margin-top: 6px; }
+.events-title { margin-top: 20px; }
+.pinned {
+    background: rgba(0, 0, 0, 0.15);
+    color: var(--chat-text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+/* Родитель видит кружки ребёнка, но не открывает чаты */
+body.role-parent #clubs-grid .club { pointer-events: none; }

@@ -139,6 +139,8 @@
     <!-- ЭКРАН 4. Кружки по интересам -->
     <section class="screen" id="clubs">
         <h1 id="clubs-title">Кружки и классы</h1>
+        <p class="hint" data-roles="parent" hidden>Здесь видно, в каких кружках ваш ребёнок. Переписку в чатах родители не видят — так договорились ради доверия и безопасности детей.</p>
+        <p class="hint" id="clubs-empty" hidden>Вы не ведёте кружков. Объявления для класса — в «Событиях», жалобы из чата класса — в «Жалобах».</p>
         <details class="new-form" data-roles="student">
             <summary class="btn second">+ Создать кружок</summary>
             <label>Название
@@ -204,6 +206,20 @@
     <!-- ЭКРАН 6. Афиша событий -->
     <section class="screen" id="events">
         <h1>События</h1>
+        <!-- Объявления классного руководителя для всего класса -->
+        <div id="announcements-box">
+            <h2>📢 Объявления класса <span id="ann-grade"></span></h2>
+            <details class="new-form" data-roles="teacher" hidden>
+                <summary class="btn second">+ Объявление для класса</summary>
+                <label>Текст объявления
+                    <input type="text" id="ann-text" maxlength="200" placeholder="Например, завтра классный час в 14:00">
+                </label>
+                <p class="error" id="ann-warning"></p>
+                <button class="btn" onclick="addAnnouncement()">Опубликовать</button>
+            </details>
+            <div id="announcements"></div>
+            <h2 class="events-title">Афиша</h2>
+        </div>
         <details class="new-form" data-roles="student">
             <summary class="btn second">+ Сообщить о событии</summary>
             <label>Что за событие?
@@ -255,7 +271,7 @@
         <div class="card">
             <h2>Общение</h2>
             <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
-            <p data-roles="teacher parent" hidden>Чужие личные сообщения не видны никому. Учитель пишет лично только ученикам своего класса и кружков и их родителям, родитель — своему ребёнку и его учителям.</p>
+            <p data-roles="teacher parent" hidden>Чужие личные сообщения и переписку в чатах класса не видят ни учителя, ни родители. Учитель пишет лично ученикам своего класса и кружков и их родителям, родитель — своему ребёнку и его учителям.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
