@@ -255,7 +255,7 @@
         <div class="card">
             <h2>Общение</h2>
             <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
-            <p data-roles="teacher parent" hidden>Учителя и родители не видят личные сообщения учеников и не могут писать им лично.</p>
+            <p data-roles="teacher parent" hidden>Чужие личные сообщения не видны никому. Учитель пишет лично только ученикам своего класса и кружков и их родителям, родитель — своему ребёнку и его учителям.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
@@ -266,13 +266,19 @@
     <!-- ЭКРАН 8. Личные сообщения: запросы и чаты. Каждый чат разрешается отдельно -->
     <section class="screen" id="private">
         <h1>Личные сообщения</h1>
-        <p class="hint">Личный чат открывается, только если согласны оба. Согласие можно отозвать кнопкой «Заблокировать».</p>
-        <h2>Запросы мне</h2>
-        <div id="dm-incoming"></div>
-        <h2>Мои запросы</h2>
-        <div id="dm-outgoing"></div>
-        <h2>Чаты</h2>
-        <div id="dm-chats"></div>
+        <h2>Учителя и родители</h2>
+        <p class="hint" id="direct-hint"></p>
+        <div id="dm-direct"></div>
+        <div data-roles="student">
+            <h2>Ученики</h2>
+            <p class="hint">Личный чат с учеником открывается, только если согласны оба. Согласие можно отозвать кнопкой «Заблокировать».</p>
+            <h2>Запросы мне</h2>
+            <div id="dm-incoming"></div>
+            <h2>Мои запросы</h2>
+            <div id="dm-outgoing"></div>
+            <h2>Чаты</h2>
+            <div id="dm-chats"></div>
+        </div>
     </section>
 
     <!-- ЭКРАН 9. Один личный чат -->
@@ -285,7 +291,7 @@
             <input type="text" id="dm-input" placeholder="Сообщение...">
             <button class="btn small" onclick="sendDm()">Отправить</button>
         </div>
-        <button class="btn logout danger-text" onclick="blockDm()">Заблокировать собеседника</button>
+        <button class="btn logout danger-text" id="dm-block" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
     <!-- ЭКРАН 10. Жалобы — только для учителя -->
@@ -314,7 +320,7 @@
         <a href="#ideas">Идеи</a>
         <a href="#events">События</a>
         <a href="#reports" data-roles="teacher" hidden>Жалобы</a>
-        <a href="#private" data-roles="student">✉️</a>
+        <a href="#private">✉️</a>
         <a href="#settings">⚙️</a>
     </nav>
 

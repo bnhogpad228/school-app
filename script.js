@@ -1145,6 +1145,8 @@ function makeButton(text, className, action) {
 // Открыть личный чат
 function openDm(nick) {
     currentDm = nick;
+    currentDirect = "";
+    document.getElementById("dm-block").hidden = false;
     document.getElementById("dm-title").textContent = "✉️ " + nick;
     document.getElementById("dm-messages").innerHTML = "";
     let messages = dmOf(nick).messages;
@@ -1166,10 +1168,161 @@ function openDm(nick) {
     location.hash = "dm";
 }
 
+// =====================================================================
+// ЛИЧНЫЕ ЧАТЫ С УЧИТЕЛЯМИ И РОДИТЕЛЯМИ
+// Кто кому может писать:
+//   ученик  — своим родителям и своим учителям (классный руководитель, учителя его кружков);
+//   родитель — своему ребёнку и учителям ребёнка; чужим детям — никогда;
+//   учитель — ученикам своего класса и кружков и их родителям.
+// Эти чаты общие для двоих, поэтому хранятся отдельно от профилей (в настоящей версии — на сервере)
+// =====================================================================
+let currentDirect = "";      // с кем открыт чат «учитель / родитель»
+
+function directKey(a, b) {
+    return [a, b].sort().join("|");        // одинаковый ключ для пары, кто бы ни писал первым
+}
+
+function loadDirect() {
+    try {
+        return JSON.parse(localStorage.getItem("schoolAppDirect")) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveDirect(all) {
+    try {
+        localStorage.setItem("schoolAppDirect", JSON.stringify(all));
+    } catch (e) {}
+}
+
+// Учителя ученика: классный руководитель его класса и учителя кружков, куда он вступил
+function teachersOf(student) {
+    let list = [];
+    for (let t in users) {
+        if (roleOf(t) !== "teacher") { continue; }
+        let joined = users[student].state.joinedClubs || [];
+        let leadsClub = (users[t].clubs || []).some(function (id) { return joined.includes(id); });
+        if ((users[t].grade && users[t].grade === users[student].grade) || leadsClub) {
+            list.push(t);
+        }
+    }
+    return list;
+}
+
+// С кем можно переписываться лично (кроме учеников между собой — там свои правила с согласием)
+function directContacts() {
+    let me = users[currentNick];
+    let list = [];
+    let add = function (nick, note) {
+        if (users[nick] && !list.some(function (c) { return c.nick === nick; })) {
+            list.push({nick: nick, note: note});
+        }
+    };
+    if (myRole() === "student") {
+        for (let n in users) {
+            if (roleOf(n) === "parent" && users[n].child === currentNick) { add(n, "родитель"); }
+        }
+        for (let t of teachersOf(currentNick)) { add(t, "учитель"); }
+    }
+    if (myRole() === "parent") {
+        add(me.child, "ваш ребёнок");
+        if (users[me.child]) {
+            for (let t of teachersOf(me.child)) { add(t, "учитель ребёнка"); }
+        }
+    }
+    if (myRole() === "teacher") {
+        for (let n in users) {
+            if (roleOf(n) === "student" && teachersOf(n).includes(currentNick)) {
+                add(n, "ученик · " + users[n].grade);
+                for (let p in users) {
+                    if (roleOf(p) === "parent" && users[p].child === n) { add(p, "родитель " + n); }
+                }
+            }
+        }
+    }
+    return list;
+}
+
+function renderDirect() {
+    let box = document.getElementById("dm-direct");
+    box.innerHTML = "";
+    let contacts = directContacts();
+    let all = loadDirect();
+    let hints = {
+        student: "Пиши своим учителям и родителям. Родитель появится здесь, когда зарегистрируется и укажет твой ник.",
+        teacher: "Ученики вашего класса и кружков и их родители.",
+        parent: "Ваш ребёнок и его учителя. Другим детям родитель писать не может."
+    };
+    document.getElementById("direct-hint").textContent = hints[myRole()];
+    if (contacts.length === 0) {
+        box.innerHTML = '<p class="hint">Пока никого нет.</p>';
+        return;
+    }
+    for (let c of contacts) {
+        let row = document.createElement("div");
+        row.className = "dm-row";
+        row.innerHTML = "<b></b><span class='buttons'></span>";
+        let count = (all[directKey(currentNick, c.nick)] || []).length;
+        row.querySelector("b").textContent = c.nick + " · " + c.note + (count ? " (" + count + ")" : "");
+        row.querySelector(".buttons").append(makeButton("Написать", "btn small", function () { openDirect(c.nick); }));
+        box.append(row);
+    }
+}
+
+function openDirect(nick) {
+    if (!directContacts().some(function (c) { return c.nick === nick; })) {
+        return;                            // писать можно только тем, кто разрешён правилами
+    }
+    currentDm = "";
+    currentDirect = nick;
+    document.getElementById("dm-title").textContent = "✉️ " + nick;
+    document.getElementById("dm-block").hidden = true;      // чат с учителем или родителем не блокируется
+    let box = document.getElementById("dm-messages");
+    box.innerHTML = "";
+    for (let m of loadDirect()[directKey(currentNick, nick)] || []) {
+        drawDirectMessage(m);
+    }
+    document.getElementById("dm-warning").textContent = "";
+    location.hash = "dm";
+}
+
+function drawDirectMessage(m) {
+    let message = document.createElement("div");
+    message.className = "message" + (m.from === currentNick ? " mine" : "");
+    message.innerHTML = "<b></b><p></p>";
+    message.querySelector("b").textContent = m.from;
+    message.querySelector("p").textContent = m.text;        // textContent — безопасно
+    document.getElementById("dm-messages").append(message);
+}
+
+function sendDirect(text) {
+    let showDmWarning = function (t) { document.getElementById("dm-warning").textContent = t; };
+    if (stopRudeOrBlocked(text, showDmWarning)) {
+        return false;                      // фильтр грубых слов работает и здесь
+    }
+    let all = loadDirect();
+    let key = directKey(currentNick, currentDirect);
+    if (!all[key]) {
+        all[key] = [];
+    }
+    let m = {from: currentNick, text: text, time: Date.now()};
+    all[key].push(m);
+    saveDirect(all);
+    drawDirectMessage(m);
+    return true;
+}
+
 // Отправить сообщение в личный чат
 function sendDm() {
     let input = document.getElementById("dm-input");
     let text = input.value.trim();
+    if (currentDirect !== "") {            // чат с учителем или родителем
+        if (text !== "" && sendDirect(text)) {
+            input.value = "";
+        }
+        return;
+    }
     let dm = dmOf(currentDm);
     if (text === "" || !dm || dm.status !== "allowed") {
         return;
@@ -1307,14 +1460,15 @@ function isOpenScreen() {
 window.addEventListener("hashchange", function () {
     if (currentNick === "" && !isOpenScreen()) {
         location.hash = "login";
-    } else if (currentNick !== "" && myRole() !== "student" && (location.hash === "#private" || location.hash === "#dm")) {
-        location.hash = "clubs";           // учителя и родители не видят личные сообщения
     } else if (currentNick !== "" && location.hash === "#reports" && myRole() !== "teacher") {
         location.hash = "clubs";
     } else if (currentNick !== "" && location.hash === "#chat" && allowedClubs() !== null && !allowedClubs().includes(currentClub)) {
         location.hash = "clubs";           // чужие кружки учителю и родителю не открываются
-    } else if (location.hash === "#dm" && currentDm === "") {
+    } else if (location.hash === "#dm" && currentDm === "" && currentDirect === "") {
         location.hash = "private";         // личный чат открывается только из списка
+    }
+    if (location.hash === "#private" && currentNick !== "") {
+        renderDirect();                    // список учителей и родителей мог измениться
     }
     if (location.hash === "#reports" && currentNick !== "" && myRole() === "teacher") {
         document.getElementById("reports-done").textContent = "";
@@ -1360,6 +1514,7 @@ function restoreScreen() {
         saveState();
     }
     renderPrivate();
+    renderDirect();
 
     // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
     renderChat();
