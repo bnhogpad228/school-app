@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <div class="app">
@@ -298,6 +298,7 @@
         <a class="back" href="#private">← Личные сообщения</a>
         <h1 id="dm-title">Личный чат</h1>
         <div id="dm-messages"></div>
+        <p class="typing" id="dm-typing" hidden></p>
         <p class="error" id="dm-warning"></p>
         <div class="send">
             <input type="text" id="dm-input" placeholder="Сообщение...">
@@ -348,6 +349,6 @@
     </nav>
 
 </div>
-<script src="script.js?v=12"></script>
+<script src="script.js?v=13"></script>
 </body>
 </html>
