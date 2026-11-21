@@ -97,6 +97,9 @@ input {
     width: 90px; height: 90px;
     margin: 0 auto 8px;
     border-radius: 50%;     /* квадрат превращается в круг */
+    font-size: 44px;        /* размер значка внутри круга */
+    line-height: 90px;      /* значок по центру круга по вертикали */
+    text-align: center;
 }
 .c1 { background: #e5532d; }
 .c2 { background: #e8a33a; }

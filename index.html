@@ -76,22 +76,9 @@
 
     <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
     <section class="screen" id="chat">
-        <h1>Чат: клуб робототехники</h1>
-        <div class="message" id="m1">
-            <b>Котик_7Б</b>
-            <p>Кто идёт в пятницу на турнир по роботам?</p>
-            <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
-        </div>
-        <div class="message" id="m2">
-            <b>Пиксель_8А</b>
-            <p>Я иду! Нужен ещё один человек в команду.</p>
-            <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
-        </div>
-        <div class="message" id="m3">
-            <b>Сова_9В</b>
-            <p>Могу помочь с программированием.</p>
-            <div class="actions"><button onclick="hideMessage(this)">Скрыть</button><button onclick="report(this)">Пожаловаться</button></div>
-        </div>
+        <h1 id="chat-title">Чат</h1>
+        <!-- Сообщения рисует script.js — у каждого кружка свои -->
+        <div id="messages"></div>
         <p class="error" id="chat-warning"></p>
         <div class="send">
             <input type="text" id="new-message" placeholder="Сообщение...">
@@ -103,12 +90,12 @@
     <section class="screen" id="clubs">
         <h1>Кружки по интересам</h1>
         <div class="grid">
-            <a class="club" href="#chat"><span class="circle c1"></span>Музыка</a>
-            <a class="club" href="#chat"><span class="circle c2"></span>Баскетбол</a>
-            <a class="club" href="#chat"><span class="circle c3"></span>Роботы</a>
-            <a class="club" href="#chat"><span class="circle c4"></span>Книги</a>
-            <a class="club" href="#chat"><span class="circle c5"></span>Фото</a>
-            <a class="club" href="#chat"><span class="circle c6"></span>Экология</a>
+            <a class="club" href="#chat" onclick="openClub('music')"><span class="circle c1">🎵</span>Музыка</a>
+            <a class="club" href="#chat" onclick="openClub('basketball')"><span class="circle c2">🏀</span>Баскетбол</a>
+            <a class="club" href="#chat" onclick="openClub('robots')"><span class="circle c3">🤖</span>Роботы</a>
+            <a class="club" href="#chat" onclick="openClub('books')"><span class="circle c4">📚</span>Книги</a>
+            <a class="club" href="#chat" onclick="openClub('photo')"><span class="circle c5">📷</span>Фото</a>
+            <a class="club" href="#chat" onclick="openClub('eco')"><span class="circle c6">🌱</span>Экология</a>
         </div>
     </section>
 

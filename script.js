@@ -171,6 +171,85 @@ function showReported(button) {
     button.disabled = true;                // повторно нажать нельзя
 }
 
+// =====================================================================
+// КРУЖКИ: у каждого свой чат с придуманными сообщениями
+// Это как словарь в Python: ключ — id кружка, значение — название, значок и сообщения
+// =====================================================================
+const CLUBS = {
+    music: {name: "Музыка", icon: "🎵", messages: [
+        ["Нота_6А", "Кто хочет собрать группу к школьному концерту?"],
+        ["Гитарист_9Б", "Я играю на гитаре, нужен барабанщик."],
+        ["Скрипка_7В", "Могу петь! Репетиции после уроков?"]
+    ]},
+    basketball: {name: "Баскетбол", icon: "🏀", messages: [
+        ["Мяч_8А", "Турнир 3×3 в пятницу, ищем четвёртого в команду."],
+        ["Прыгун_9В", "Я в деле! Тренируемся во дворе в среду?"],
+        ["Кольцо_7Б", "Возьму мяч, у меня есть хороший."]
+    ]},
+    robots: {name: "Роботы", icon: "🤖", messages: [
+        ["Котик_7Б", "Кто идёт в пятницу на турнир по роботам?"],
+        ["Пиксель_8А", "Я иду! Нужен ещё один человек в команду."],
+        ["Сова_9В", "Могу помочь с программированием."]
+    ]},
+    books: {name: "Книги", icon: "📚", messages: [
+        ["Читатель_8Б", "Что читаем в этом месяце? Предлагаю фантастику."],
+        ["Закладка_6В", "Давайте обсуждать в библиотеке по четвергам."],
+        ["Страница_9А", "Принесу пару книг для обмена."]
+    ]},
+    photo: {name: "Фото", icon: "📷", messages: [
+        ["Объектив_9Б", "Устроим фотопрогулку по школьному двору?"],
+        ["Кадр_7А", "Можно сделать выставку на стенде у входа."],
+        ["Вспышка_8В", "Я за! Снимаю на телефон, это считается?"]
+    ]},
+    eco: {name: "Экология", icon: "🌱", messages: [
+        ["Листик_6Б", "В субботу сажаем деревья во дворе, кто с нами?"],
+        ["Ёлка_8А", "Иду! Надо взять перчатки."],
+        ["Капля_9В", "Предлагаю поставить контейнеры для раздельного сбора."]
+    ]}
+};
+let currentClub = "robots";   // какой чат открыт сейчас
+
+// Нажали на кружок: запоминаем его и рисуем его чат
+function openClub(clubId) {
+    currentClub = clubId;
+    renderChat();
+    showChatWarning(state.blocked ? "Отправка сообщений приостановлена. Модератор рассмотрит ситуацию." : "");
+}
+
+// Нарисовать чат текущего кружка заново
+function renderChat() {
+    let club = CLUBS[currentClub];
+    document.getElementById("chat-title").textContent = club.icon + " Чат: " + club.name;
+    document.getElementById("messages").innerHTML = "";        // очищаем старые сообщения
+
+    // Придуманные сообщения кружка. id вида robots-0, music-1...
+    for (let i = 0; i < club.messages.length; i++) {
+        let nick = club.messages[i][0];
+        let text = club.messages[i][1];
+        addMessageToChat(currentClub + "-" + i, nick, text);
+    }
+
+    // Свои сообщения — только те, что отправлены в этот кружок. id вида my0, my1...
+    for (let i = 0; i < state.myMessages.length; i++) {
+        let my = state.myMessages[i];
+        if (typeof my === "string") {      // старый формат (до кружков) — считаем, что это «Роботы»
+            my = {club: "robots", text: my};
+        }
+        if (my.club === currentClub) {
+            addMessageToChat("my" + i, currentNick, my.text);
+        }
+    }
+
+    // Скрытые и пожалованные сообщения отмечаем снова
+    for (let message of document.querySelectorAll("#messages .message")) {
+        if (state.hidden.includes(message.id)) {
+            showHidden(message);
+        } else if (state.reported.includes(message.id)) {
+            showReported(message.querySelectorAll(".actions button")[1]);   // вторая кнопка — «Пожаловаться»
+        }
+    }
+}
+
 // Нарисовать сообщение в чате (используется и при отправке, и при загрузке)
 function addMessageToChat(id, nick, text) {
     let message = document.createElement("div");
@@ -190,8 +269,8 @@ function addMessageToChat(id, nick, text) {
     }
     message.querySelector("p").textContent = text;
 
-    // Ставим сообщение перед строкой предупреждений и полем ввода
-    document.getElementById("chat-warning").before(message);
+    // Добавляем сообщение в конец списка сообщений
+    document.getElementById("messages").append(message);
     return message;
 }
 
@@ -218,7 +297,7 @@ function sendMessage() {
     }
     showChatWarning("");                   // убираем старое предупреждение
 
-    state.myMessages.push(text);
+    state.myMessages.push({club: currentClub, text: text});   // запоминаем, в какой кружок отправили
     saveState();
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
     addMessageToChat("my" + (state.myMessages.length - 1), currentNick, text);
@@ -305,27 +384,8 @@ window.addEventListener("hashchange", function () {
 // Восстановить экран из данных пользователя
 function restoreScreen() {
 
-    // Свои сообщения рисуем обратно в чат
-    for (let i = 0; i < state.myMessages.length; i++) {      // как for i in range(len(...))
-        addMessageToChat("my" + i, currentNick, state.myMessages[i]);
-    }
-
-    // Скрытые сообщения снова скрываем
-    for (let id of state.hidden) {
-        let message = document.getElementById(id);
-        if (message) {
-            showHidden(message);
-        }
-    }
-
-    // Жалобы снова показываем как отправленные
-    for (let id of state.reported) {
-        let message = document.getElementById(id);
-        if (message && !state.hidden.includes(id)) {
-            let button = message.querySelectorAll(".actions button")[1];   // вторая кнопка — «Пожаловаться»
-            showReported(button);
-        }
-    }
+    // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
+    renderChat();
 
     // Инициативы, где нажимал «Я в деле»
     for (let id of state.joined) {
