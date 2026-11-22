@@ -547,7 +547,7 @@ let currentClub = "class";    // какой чат открыт сейчас (п
 // Нажали на кружок: запоминаем его и рисуем его чат
 function openClub(clubId) {
     currentClub = clubId;
-    document.getElementById("members-list").hidden = true;
+    closeClubPanel();
     renderChat();
     showChatWarning(state.blocked ? "Отправка сообщений приостановлена. Модератор рассмотрит ситуацию." : "");
 }
@@ -699,10 +699,12 @@ function clubMembers(id) {
     return list;
 }
 
-// Полоска над чатом: «Участники», «Вступить / Выйти» и можно ли писать
+// Шапка чата: число участников, их список, «Вступить / Выйти» и можно ли писать
 function updateClubBar() {
     let members = clubMembers(currentClub);
-    document.getElementById("members-btn").textContent = "👥 Участники: " + members.length;
+    let count = members.length + " " + plural(members.length, "участник", "участника", "участников");
+    document.getElementById("members-btn").textContent = "👥 " + count + " ▾";
+    document.getElementById("members-count").textContent = "Участники · " + members.length;
     let box = document.getElementById("members-list");
     box.innerHTML = "";
     for (let m of members) {
@@ -717,21 +719,41 @@ function updateClubBar() {
         }
         box.append(row);
     }
-    let joinButton = document.getElementById("join-btn");
     let send = document.querySelector("#chat .send");
     let readonly = document.getElementById("chat-readonly");
     let member = isMember(currentClub);
-    joinButton.hidden = currentClub === "class" || CLUBS[currentClub].owner === currentNick;
-    joinButton.textContent = member ? "Выйти из кружка" : "Вступить в кружок";
+    let canJoin = myRole() !== "curator" && currentClub !== "class" && CLUBS[currentClub].owner !== currentNick;
+    document.getElementById("join-btn").hidden = !canJoin || member;      // «Вступить» — внизу, вместо поля ввода
+    document.getElementById("leave-btn").hidden = !canJoin || !member;    // «Выйти» — в меню под названием
     send.hidden = !member;
     readonly.hidden = member && !moderates(currentClub);
     readonly.textContent = member ? "Вы модератор этого чата: можете скрыть сообщение, нарушающее правила." :
         (moderates(currentClub) ? "Вы модератор этого кружка. Чтобы писать, вступите в него." : "Чтобы писать в этом кружке, вступи в него.");
 }
 
-function toggleMembers() {
-    let box = document.getElementById("members-list");
-    box.hidden = !box.hidden;
+// 1 участник, 2 участника, 5 участников
+function plural(n, one, few, many) {
+    let d = n % 10, h = n % 100;
+    if (d === 1 && h !== 11) { return one; }
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) { return few; }
+    return many;
+}
+
+// Нажали на название чата — открыть или закрыть меню с участниками
+function toggleClubPanel(event) {
+    event.stopPropagation();
+    let panel = document.getElementById("club-panel");
+    let open = panel.hidden;
+    closeMenus();
+    panel.hidden = !open;
+    document.getElementById("chat-title-btn").setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function closeClubPanel() {
+    let panel = document.getElementById("club-panel");
+    if (panel) { panel.hidden = true; }
+    let btn = document.getElementById("chat-title-btn");
+    if (btn) { btn.setAttribute("aria-expanded", "false"); }
 }
 
 function toggleJoin() {
@@ -749,6 +771,7 @@ function toggleJoin() {
     if (!isLocalOnly(currentClub)) {
         remoteSend({t: i === -1 ? "join" : "leave", target: currentClub, nick: currentNick, grade: classGrade()});
     }
+    closeClubPanel();
     updateClubBar();
 }
 
@@ -2157,8 +2180,30 @@ function addMoreButton(message) {
         let open = message.classList.contains("open");
         closeMenus();
         message.classList.toggle("open", !open);
+        if (!open) { placeMenu(message, more); }
     };
     message.append(more);
+}
+
+// Меню не должно уезжать за край экрана: ставим его у «⋯», но внутри экрана.
+// Не помещается снизу (над полем ввода и нижним меню) — открываем вверх.
+function placeMenu(message, more) {
+    let menu = message.querySelector(".actions");
+    if (!menu) { return; }
+    menu.style.left = "0px";
+    menu.style.top = "0px";
+    let b = more.getBoundingClientRect();
+    let w = menu.offsetWidth, h = menu.offsetHeight;
+    let bottom = window.innerHeight - 8;
+    let send = document.querySelector(".screen:target .send:not([hidden])");
+    let nav = document.querySelector("nav.menu");
+    if (send) { bottom = Math.min(bottom, send.getBoundingClientRect().top - 6); }
+    if (nav && nav.offsetHeight) { bottom = Math.min(bottom, nav.getBoundingClientRect().top - 6); }
+    let left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8));
+    let top = b.bottom + 4;
+    if (top + h > bottom) { top = Math.max(8, b.top - h - 4); }
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
 }
 
 function closeMenus() {
@@ -2167,11 +2212,17 @@ function closeMenus() {
     }
     let dmMenu = document.getElementById("dm-menu");
     if (dmMenu) { dmMenu.hidden = true; }
+    closeClubPanel();
 }
+
+// Меню у сообщения стоит на месте экрана — при прокрутке закрываем его
+window.addEventListener("scroll", function () {
+    for (let m of document.querySelectorAll(".message.open")) { m.classList.remove("open"); }
+}, {passive: true});
 
 // Клик мимо меню или по пункту меню — меню закрывается
 document.addEventListener("click", function (event) {
-    if (event.target.closest(".dm-menu") && !event.target.closest("button")) {
+    if ((event.target.closest(".dm-menu") || event.target.closest(".club-panel")) && !event.target.closest("button")) {
         return;
     }
     if (!event.target.closest(".more")) {
