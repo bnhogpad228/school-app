@@ -1,8 +1,8 @@
 // Service worker — «помощник» PWA. Он сохраняет файлы приложения на телефоне,
 // поэтому после первого открытия приложение запускается даже без интернета.
-const CACHE = "school-app-v17";   // при изменении файлов меняем номер версии
+const CACHE = "school-app-v18";   // при изменении файлов меняем номер версии
 const FILES = [
-    "./", "./index.html", "./style.css?v=17", "./script.js?v=17", "./manifest.json",
+    "./", "./index.html", "./style.css?v=18", "./script.js?v=18", "./manifest.json",
     "./fonts/Montserrat.woff", "./fonts/ComicRelief-Bold.woff", "./fonts/FiraSans-SemiBold.woff",
     "./icons/icon-192.png", "./icons/icon-512.png"
 ];

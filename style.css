@@ -671,7 +671,6 @@ body.dark #clubs .circle .icon { color: #10232a; }   /* тёмная тема: �
 }
 #clubs .create-tile .circle .icon { color: var(--login-text) !important; width: 46px; height: 46px; stroke-width: 2; }
 #clubs .grid .club.wide { grid-column: 1 / -1; }          /* последний нечётный круг — по центру */
-=======
 /* «Скрипка_7В печатает…» в личном чате */
 .typing { color: var(--chat-text); opacity: 0.8; font-style: italic; font-size: 14px; margin: 4px 0 8px; }
 
