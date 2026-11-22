@@ -135,9 +135,15 @@ function register() {
         error.textContent = "Пароли не совпадают";
         return;
     }
+    let owner = remoteNickOwner(nick);
+    if (owner && owner !== DEVICE_ID) {
+        error.textContent = "Этот ник уже занят в школе — придумай другой";
+        return;
+    }
     users[nick] = user;
     currentNick = nick;
     saveState();
+    remoteSend({t: "nick", nick: nick, grade: user.grade, role: role});   // ник занят — на других телефонах его не взять
     startSession(nick);
 }
 
@@ -265,6 +271,7 @@ function report(button) {
         if (!state.reported.includes(message.id)) {
             state.reported.push(message.id);
             saveState();
+            remoteSend({t: "rep", gid: message.dataset.gid, grade: classGrade()});
         }
         showReported(button);
     });
@@ -381,8 +388,10 @@ function addAnnouncement() {
         return;
     }
     let list = loadAnnouncements();
-    list.push({grade: classGrade(), from: currentNick, text: text, time: Date.now()});
+    let ann = {grade: classGrade(), from: currentNick, text: text, time: Date.now()};
+    list.push(ann);
     saveAnnouncements(list);
+    remoteSend(Object.assign({t: "ann"}, ann), true);
     document.getElementById("ann-text").value = "";
     document.querySelector("#announcements-box .new-form").open = false;
     renderAnnouncements();
@@ -397,13 +406,15 @@ function deleteAnnouncement(time) {
 function removeAnnouncement(time) {
     let list = loadAnnouncements().filter(function (a) { return !(a.time === time && a.from === currentNick); });
     saveAnnouncements(list);
+    remoteSend({t: "anndel", from: currentNick, time: time}, true);
     renderAnnouncements();
 }
 
 // Объявления своего класса, новые сверху
 function classAnnouncements() {
     let grade = classGrade();
-    return loadAnnouncements().filter(function (a) { return a.grade === grade; })
+    return loadAnnouncements().concat(remoteAnnouncements())        // свои с телефона + с сервера
+                              .filter(function (a) { return a.grade === grade; })
                               .sort(function (a, b) { return b.time - a.time; });
 }
 
@@ -499,11 +510,22 @@ function renderChat() {
             all.push({nick: nick, i: i, my: my});
         }
     }
+    // Сообщения с других телефонов — пришли с сервера (свои кружки пока не синхронизируются)
+    if (!currentClub.startsWith("myclub")) {
+        for (let m of remoteMessagesIn(currentClub, classGrade())) {
+            if (users[m.nick]) {
+                continue;                  // этот ученик есть на телефоне — его сообщения уже добавлены
+            }
+            all.push({nick: m.nick, gid: m.gid, my: m});
+        }
+    }
     all.sort(function (a, b) { return (a.my.time || 0) - (b.my.time || 0); });
     for (let item of all) {
-        let id = item.nick === currentNick ? "my" + item.i : "u-" + item.nick + "-" + item.i;
-        let message = addMessageToChat(id, item.nick, item.my.deleted ? "" : item.my.text);
-        message.dataset.gid = "u-" + item.nick + "-" + item.i;   // общий номер — для модерации
+        let gid = item.gid || "u-" + item.nick + "-" + item.i;    // общий номер — для модерации
+        let id = item.nick === currentNick && !item.gid ? "my" + item.i : gid;
+        // с другого телефона «Написать лично» пока нет: личка между телефонами — следующий шаг
+        let message = addMessageToChat(id, item.nick, item.my.deleted ? "" : item.my.text, "messages", !item.gid);
+        message.dataset.gid = gid;
         showMyMessageState(message, item.my);
     }
 
@@ -561,6 +583,9 @@ function clubMembers(id) {
     for (let n in users) {
         let inClub = id === "class" ? users[n].grade === classGrade() : (users[n].state.joinedClubs || []).includes(id);
         if (inClub) { add(n, users[n].grade); }
+    }
+    if (!id.startsWith("myclub")) {
+        for (let m of remoteMessagesIn(id, classGrade())) { add(m.nick, m.grade); }   // с других телефонов
     }
     for (let m of club.messages) { add(m[0], ""); }
     for (let n of CLUB_EXTRA[id] || []) { add(id === "class" ? n + "_" + classGrade() : n, ""); }
@@ -621,13 +646,17 @@ function toggleJoin() {
 // Решения модератора хранятся отдельно от профилей — они общие для всех
 // =====================================================================
 function loadModeration() {
+    let result = {hidden: [], dismissed: []};
     try {
         let saved = JSON.parse(localStorage.getItem("schoolAppModeration"));
         if (saved) {
-            return saved;
+            result = saved;
         }
     } catch (e) {}
-    return {hidden: [], dismissed: []};
+    let fromServer = remoteModeration();       // решения модераторов с других телефонов
+    for (let gid of fromServer.hidden) { if (!result.hidden.includes(gid)) { result.hidden.push(gid); } }
+    for (let gid of fromServer.dismissed) { if (!result.dismissed.includes(gid)) { result.dismissed.push(gid); } }
+    return result;
 }
 
 function saveModeration(moderation) {
@@ -652,6 +681,7 @@ function hideForAll(message) {
     if (!moderation.hidden.includes(message.dataset.gid)) {
         moderation.hidden.push(message.dataset.gid);
         saveModeration(moderation);
+        remoteSend({t: "hide", gid: message.dataset.gid}, true);
     }
     showTeacherHidden(message);
 }
@@ -663,6 +693,10 @@ function messageInfo(gid) {
     if (gid.startsWith("u-")) {
         let nick = gid.slice(2, last);
         let my = users[nick] && users[nick].state.myMessages[index];
+        if (!users[nick]) {
+            let m = remoteMessage(gid);          // сообщение с другого телефона
+            return m && !m.deleted ? {club: m.club, nick: m.nick, text: m.text, grade: m.grade} : null;
+        }
         if (!my || my.deleted || typeof my === "string") {
             return null;
         }
@@ -690,6 +724,11 @@ function renderReports() {
             if (id.startsWith("class-") && users[nick].grade !== users[currentNick].grade) { continue; }
             counts[id] = (counts[id] || 0) + 1;
         }
+    }
+    for (let r of othersEvents("rep")) {                                  // жалобы с других телефонов
+        if (!r.gid || r.gid.startsWith("dm-")) { continue; }
+        if (r.gid.startsWith("class-") && r.grade !== users[currentNick].grade) { continue; }
+        counts[r.gid] = (counts[r.gid] || 0) + 1;
     }
     let allowed = reportClubs();
     let shown = 0;
@@ -732,6 +771,7 @@ function closeReport(gid, hide) {
         moderation.dismissed.push(gid);
     }
     saveModeration(moderation);
+    remoteSend({t: hide ? "hide" : "keep", gid: gid}, true);
     document.getElementById("reports-done").textContent = hide ? "Сообщение скрыто у всех." : "Жалоба отклонена, сообщение оставлено.";
     renderReports();
 }
@@ -765,10 +805,11 @@ function addMessageToChat(id, nick, text, container = "messages", canWritePrivat
 
     // Ник и текст вставляем через textContent — так чужой код в сообщении не выполнится
     message.querySelector("b").textContent = nick;
-    if (users[nick] && users[nick].grade) {
+    let gradeText = users[nick] ? users[nick].grade : remoteGradeOf(nick);
+    if (gradeText) {
         let grade = document.createElement("span");
         grade.className = "grade";
-        grade.textContent = " · " + users[nick].grade;    // например «Ёжик · 7Б»
+        grade.textContent = " · " + gradeText;            // например «Ёжик · 7Б»
         message.querySelector("b").after(grade);
     }
     message.querySelector("p").textContent = text;
@@ -793,10 +834,16 @@ function sendMessage() {
         hint.remove();                     // первое сообщение в пустом кружке — подсказка больше не нужна
     }
 
-    state.myMessages.push({club: currentClub, text: text, time: Date.now()});   // запоминаем, в какой кружок отправили
+    let time = Date.now();
+    state.myMessages.push({club: currentClub, text: text, time: time});   // запоминаем, в какой кружок отправили
     saveState();
+    let index = state.myMessages.length - 1;
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
-    addMessageToChat("my" + (state.myMessages.length - 1), currentNick, text);
+    let message = addMessageToChat("my" + index, currentNick, text);
+    message.dataset.gid = "u-" + currentNick + "-" + index;            // общий номер — для модерации
+    if (!currentClub.startsWith("myclub")) {
+        remoteSend({t: "msg", nick: currentNick, grade: classGrade(), club: currentClub, i: index, text: text, time: time});
+    }
     input.value = "";                      // очищаем поле
 }
 
@@ -863,6 +910,9 @@ function deleteMessage(forAll) {
         data.deleted = true;               // все увидят «Сообщение удалено»
         data.text = "";                    // сам текст стираем
         saveState();
+        if (message.id.startsWith("my")) {
+            remoteSend({t: "del", gid: message.dataset.gid});
+        }
         showMyMessageState(message, data);
     } else {
         data.deletedForMe = true;          // пропадает только с моего экрана
@@ -905,6 +955,9 @@ function saveEdit(button) {
         data.text = text;
         data.edited = true;
         saveState();
+        if (message.id.startsWith("my")) {
+            remoteSend({t: "edit", gid: message.dataset.gid, text: text});
+        }
     }
     finishEdit(message, data);
 }
