@@ -2192,8 +2192,10 @@ function placeMenu(message, more) {
     if (!menu) { return; }
     menu.style.left = "0px";
     menu.style.top = "0px";
+    let z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;   // если страницу увеличили через CSS
     let b = more.getBoundingClientRect();
-    let w = menu.offsetWidth, h = menu.offsetHeight;
+    let r = menu.getBoundingClientRect();
+    let w = r.width, h = r.height;
     let bottom = window.innerHeight - 8;
     let send = document.querySelector(".screen:target .send:not([hidden])");
     let nav = document.querySelector("nav.menu");
@@ -2202,8 +2204,8 @@ function placeMenu(message, more) {
     let left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8));
     let top = b.bottom + 4;
     if (top + h > bottom) { top = Math.max(8, b.top - h - 4); }
-    menu.style.left = left + "px";
-    menu.style.top = top + "px";
+    menu.style.left = (left / z) + "px";
+    menu.style.top = (top / z) + "px";
 }
 
 function closeMenus() {
@@ -2215,9 +2217,17 @@ function closeMenus() {
     closeClubPanel();
 }
 
-// Меню у сообщения стоит на месте экрана — при прокрутке закрываем его
+// При прокрутке меню едет вместе со своей «⋯»; ушла «⋯» за край экрана — меню закрывается
 window.addEventListener("scroll", function () {
-    for (let m of document.querySelectorAll(".message.open")) { m.classList.remove("open"); }
+    for (let m of document.querySelectorAll(".message.open")) {
+        let more = m.querySelector(".more");
+        let b = more ? more.getBoundingClientRect() : null;
+        if (!b || b.bottom < 0 || b.top > window.innerHeight) {
+            m.classList.remove("open");
+        } else {
+            placeMenu(m, more);
+        }
+    }
 }, {passive: true});
 
 // Клик мимо меню или по пункту меню — меню закрывается
