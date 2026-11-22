@@ -65,7 +65,7 @@ function ensureRemote() {
 }
 let outbox = readJson("schoolAppOutbox", []);   // что ещё не удалось отправить
 let remoteOnline = false;
-const SITE_VERSION = 30;         // меняем вместе с ?v= в index.html
+const SITE_VERSION = 31;         // меняем вместе с ?v= в index.html
 const SERVER_NEED = 3;           // какая версия функции нужна этому сайту
 let serverVersion = 0;
 let lastReject = "";             // что сервер отклонил последним (видно в «Настройках»)
@@ -134,6 +134,17 @@ async function poll() {
         let data = await res.json();
         remoteOnline = true;
         serverVersion = data.v || 1;
+        // Данные на сервере очистили (бакет создали заново) — самое раннее событие на сервере
+        // уже не то, что у нас. Забываем старую копию и скачиваем всё заново при следующем опросе
+        if (typeof data.first === "string" && key === remoteKey && store.events.length > 0 && data.first !== store.events[0].k) {
+            store.events = [];
+            store.last = "";
+            writeJson(key, store);
+            claimed = "";                      // ник нужно занять заново
+            polling = false;
+            location.reload();                 // перерисовать без старых кружков и сообщений
+            return;
+        }
         if (data.events && data.events.length > 0 && key === remoteKey) {   // пока ждали ответа, мог войти другой
             store.events = store.events.concat(data.events);
             store.last = data.events[data.events.length - 1].k;
