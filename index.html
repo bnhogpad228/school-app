@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=34">
+    <link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
 <div class="app">
@@ -38,7 +38,7 @@
         </div>
         <p class="muted">Приложение для учеников нашей школы. Код школы один для всех учеников — так посторонние не войдут.</p>
         <label>Код школы
-            <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
+            <input type="text" id="code" placeholder="Выдаёт классный руководитель" autocomplete="off">
         </label>
         <label>Ник
             <input type="text" id="nick" placeholder="Например, Енот_7Б" autocomplete="off">
@@ -63,15 +63,15 @@
         </div>
         <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
         <label>Код школы
-            <input type="text" id="reg-code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
+            <input type="text" id="reg-code" placeholder="Выдаёт классный руководитель" autocomplete="off">
         </label>
         <!-- Только для модератора: второй, отдельный код — чтобы любой ученик не стал модератором -->
         <label data-reg="teacher" hidden>Код модератора
-            <input type="text" id="reg-teacher-code" placeholder="Его выдаёт совет старшеклассников" autocomplete="off">
+            <input type="text" id="reg-teacher-code" placeholder="Выдаёт совет старшеклассников" autocomplete="off">
         </label>
         <!-- Только для учителя-куратора: свой код, его выдаёт администрация школы -->
         <label data-reg="curator" hidden>Код учителя
-            <input type="text" id="reg-curator-code" placeholder="Его выдаёт администрация школы" autocomplete="off">
+            <input type="text" id="reg-curator-code" placeholder="Выдаёт администрация школы" autocomplete="off">
         </label>
         <label><span id="reg-nick-label">Ник (не фамилия!)</span>
             <input type="text" id="reg-nick" placeholder="Например, Енот_7Б" autocomplete="off">
@@ -377,7 +377,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=34"></script>
-<script src="script.js?v=34"></script>
+<script src="sync.js?v=35"></script>
+<script src="script.js?v=35"></script>
 </body>
 </html>

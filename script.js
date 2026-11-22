@@ -670,6 +670,7 @@ function clubMembers(id) {
     let add = function (nick, note) {
         if (!seen[nick]) {
             seen[nick] = true;
+            if (note && nick.endsWith(note)) { note = ""; }   // «Енот_9А · 9А» — класс уже виден в нике
             list.push({nick: nick, note: note});
         }
     };
@@ -977,6 +978,7 @@ function sendMessage() {
     let index = state.myMessages.length - 1;
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
     let message = addMessageToChat("my" + index, currentNick, text);
+    scrollChatToEnd();                     // своё сообщение и поле ввода — на экране
     message.dataset.gid = "u-" + currentNick + "-" + index;            // общий номер — для модерации
     if (!isLocalOnly(currentClub)) {
         remoteSend({t: "msg", nick: currentNick, grade: classGrade(), club: currentClub, i: index, text: text, time: time});
@@ -1497,7 +1499,9 @@ function applyRemoteDm() {
     if (changed) {
         renderPrivate();
         if (location.hash === "#dm" && currentDm !== "" && !document.querySelector("#dm-messages .edit-input")) {
+            let stick = nearChatEnd(), y = window.scrollY;
             openDm(currentDm);             // открыт чат — дорисовываем новые сообщения
+            if (stick) { scrollChatToEnd(); } else { window.scrollTo(0, y); }
         }
     }
 }
@@ -1752,6 +1756,7 @@ function sendDm() {
     saveState();
     let index = dm.messages.length - 1;
     addMessageToChat("dm-" + currentDm + "-" + index, currentNick, text, "dm-messages", false);
+    scrollChatToEnd();
     input.value = "";
     if (dm.real) {
         remoteSend({t: "dm", from: currentNick, to: currentDm, i: index, text: text, time: Date.now()});   // живому ученику
@@ -1782,8 +1787,10 @@ function autoReply(nick, text) {
     setTimeout(function () {
         if (location.hash === "#dm" && currentDm === nick) {
             let typing = document.getElementById("dm-typing");
+            let stick = nearChatEnd();
             typing.textContent = nick + " печатает…";
             typing.hidden = false;
+            if (stick) { scrollChatToEnd(); }
         }
     }, readTime);
     setTimeout(function () {
@@ -1795,7 +1802,9 @@ function autoReply(nick, text) {
         dm.messages.push({from: nick, text: answer});
         saveState();
         if (location.hash === "#dm" && currentDm === nick) {
+            let stick = nearChatEnd();
             addMessageToChat("dm-" + nick + "-" + (dm.messages.length - 1), nick, answer, "dm-messages", false);
+            if (stick) { scrollChatToEnd(); }
             markDmSeen(nick);              // человек сейчас в этом чате — ответ сразу прочитан
         } else {
             updateBadge();                 // вышел из чата — на «Сообщениях» появится красный кружок
@@ -2047,6 +2056,11 @@ if ("serviceWorker" in navigator) {
 // Экран открывается по #chat / #dm, и браузер сам прыгает к его началу.
 // Чуть позже прокручиваем вниз — к самому новому сообщению.
 // =====================================================================
+// Видно ли сейчас конец переписки (с запасом) — тогда новое сообщение докручиваем
+function nearChatEnd() {
+    return window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+}
+
 function scrollChatToEnd() {
     if (location.hash !== "#chat" && location.hash !== "#dm") {
         return;
