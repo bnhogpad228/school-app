@@ -776,7 +776,7 @@ body:has(#events:target) { background: var(--login-bg); }
 #events .event, #events .announcement { background: #a6e6cf; color: #10302a; border: none; }
 #events .event b { color: #10302a; }
 #events .event span, #events .event-foot { color: #2f5a4f; }
-#events .event-foot .go { background: #5fcfa8; color: #10302a; border: 2px solid #1d4d40; }
+#events .event-foot .go { background: #4f7d73; color: #ffffff; border: 2px solid #1d4d40; }   /* «Пойду!» — серо-зелёная, темнее карточки */
 #events .event-foot .go:disabled { background: transparent; color: #2f5a4f; border-color: #2f5a4f; }
 #events .event .mine-tag { color: #a8401c; }
 #events .who { color: #2f5a4f; }
@@ -790,7 +790,7 @@ body.dark #events .new-form .btn { background: #2e8a6a; color: #ffffff; }
 body.dark #events .event, body.dark #events .announcement { background: #3d8494; color: #ffffff; }
 body.dark #events .event b { color: #ffffff; }
 body.dark #events .event span, body.dark #events .event-foot, body.dark #events .who { color: #e1f1f4; }
-body.dark #events .event-foot .go { background: transparent; color: #ffffff; border: 2px solid #173f4b; }
+body.dark #events .event-foot .go { background: #173f4b; color: #ffffff; border: 2px solid #173f4b; }   /* тёмная заливка — видно на карточке */
 body.dark #events .event-foot .go:disabled { color: #cfe8ec; border-color: #cfe8ec; }
 body.dark #events .event .mine-tag { color: #ffffff; }
 /* Форма события как на макете: кнопка сверху, мятная карточка с полями, «Опубликовать» под ней */
