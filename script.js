@@ -88,12 +88,13 @@ function register() {
     let password2 = document.getElementById("reg-password2").value;
     let error = document.getElementById("register-error");
 
-    if (role === "teacher" && code !== TEACHER_CODE) {
-        error.textContent = "Неверный код учителя";
+    if (code !== SCHOOL_CODE) {            // код школы — один для всех, и для учителей тоже
+        error.textContent = "Неверный код школы";
         return;
     }
-    if (role !== "teacher" && code !== SCHOOL_CODE) {
-        error.textContent = "Неверный код школы";
+    // Учитель вводит ещё и код учителя — его знает только администрация
+    if (role === "teacher" && document.getElementById("reg-teacher-code").value.trim() !== TEACHER_CODE) {
+        error.textContent = "Неверный код учителя";
         return;
     }
     if (nick === "") {
@@ -164,18 +165,16 @@ function changeRole() {
         el.hidden = !el.dataset.reg.split(" ").includes(role);
     }
     let texts = {
-        student: ["Код школы", "Его выдаёт классный руководитель", "Ник (не фамилия!)", "Например, Енот_7Б", "Класс",
+        student: ["Ник (не фамилия!)", "Например, Енот_7Б", "Класс",
                   "Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события."],
-        teacher: ["Код учителя", "Его выдаёт администрация школы", "Как к вам обращаться (без фамилии)", "Например, Анна Сергеевна",
+        teacher: ["Ник (не имя и не фамилия!)", "Например, Сова_Роботы",
                   "Классное руководство (если есть)",
                   "Видите чаты своих кружков, разбираете жалобы (и из чата своего класса), делаете объявления для класса. Писать в чатах и лично ученикам учитель не может."]
     }[role];
-    document.getElementById("reg-code-label").textContent = texts[0];
-    document.getElementById("reg-code").placeholder = texts[1];
-    document.getElementById("reg-nick-label").textContent = texts[2];
-    document.getElementById("reg-nick").placeholder = texts[3];
-    document.getElementById("reg-grade-label").textContent = texts[4];
-    document.getElementById("role-about").textContent = texts[5];
+    document.getElementById("reg-nick-label").textContent = texts[0];
+    document.getElementById("reg-nick").placeholder = texts[1];
+    document.getElementById("reg-grade-label").textContent = texts[2];
+    document.getElementById("role-about").textContent = texts[3];
 }
 
 // =====================================================================
@@ -192,9 +191,9 @@ function login() {
         error.textContent = "Неверный ник или пароль";
         return;
     }
-    // Учитель входит по коду учителя, ученики — по коду школы
-    if (code !== (roleOf(nick) === "teacher" ? TEACHER_CODE : SCHOOL_CODE)) {
-        error.textContent = roleOf(nick) === "teacher" ? "Неверный код учителя" : "Неверный код школы";
+    // Вход у всех по коду школы (код учителя проверили один раз — при регистрации)
+    if (code !== SCHOOL_CODE) {
+        error.textContent = "Неверный код школы";
         return;
     }
     startSession(nick);

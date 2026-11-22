@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div class="app">
@@ -37,7 +37,7 @@
             </svg>
         </div>
         <p class="muted">Приложение для учеников нашей школы. Код школы один для всех учеников — так посторонние не войдут.</p>
-        <label>Код школы <span class="label-note">(учителям — код учителя)</span>
+        <label>Код школы
             <input type="text" id="code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
         <label>Ник
@@ -61,8 +61,12 @@
             <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span><i>📚</i>Учитель</span></label>
         </div>
         <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
-        <label><span id="reg-code-label">Код школы</span>
+        <label>Код школы
             <input type="text" id="reg-code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
+        </label>
+        <!-- Только для учителя: второй, отдельный код — чтобы ученик не зарегистрировался учителем -->
+        <label data-reg="teacher" hidden>Код учителя
+            <input type="text" id="reg-teacher-code" placeholder="Его выдаёт администрация школы" autocomplete="off">
         </label>
         <label><span id="reg-nick-label">Ник (не фамилия!)</span>
             <input type="text" id="reg-nick" placeholder="Например, Енот_7Б" autocomplete="off">
@@ -349,6 +353,6 @@
     </nav>
 
 </div>
-<script src="script.js?v=13"></script>
+<script src="script.js?v=14"></script>
 </body>
 </html>
