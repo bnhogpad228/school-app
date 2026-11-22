@@ -495,7 +495,6 @@ body:not(.dark) .molecule .atom-o { fill: #e0904a; }
 .label-note { font-weight: normal; font-size: 14px; opacity: 0.8; }
 
 /* ===== Чат: участники, вступить, «только чтение» ===== */
-.club-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 12px; }
 .chip {
     min-height: 40px;
     padding: 0 14px;
@@ -508,13 +507,33 @@ body:not(.dark) .molecule .atom-o { fill: #e0904a; }
     font-weight: 600;
     cursor: pointer;
 }
-#members-list {
-    background: var(--bubble-other);
-    color: var(--chat-text);
-    border-radius: 16px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
+/* Название чата — это кнопка: под ним меню с участниками и «Выйти из кружка» */
+.chat-title-btn {
+    display: block; width: 100%; margin: 0; padding: 0; border: none;
+    background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer;
 }
+.chat-title-btn h1 { margin: 8px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-sub { display: block; margin: 2px 0 4px; font-size: 14px; font-weight: 600; color: var(--chat-text); opacity: 0.8; }
+.chat-title-btn:active h1 { opacity: 0.75; }
+.club-panel {
+    position: absolute; left: 12px; right: 12px; top: 100%; z-index: 25;
+    max-height: 60vh; overflow-y: auto; padding: 12px 14px;
+    background: #ffffff; color: #10302a; border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+.club-panel[hidden] { display: none; }
+.club-panel-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; margin-bottom: 4px; }
+#members-list { margin-bottom: 4px; }
+.leave-btn {
+    display: block; width: 100%; margin: 8px 0 0; padding: 12px; border: 1.5px solid #c0392b; border-radius: 12px;
+    background: transparent; color: #c0392b; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.leave-btn[hidden] { display: none; }
+body.dark .club-panel { background: #173f4b; color: #ffffff; border: 1px solid #4f97a6; }
+body.dark .leave-btn { border-color: #ffb4a8; color: #ffb4a8; }
+/* Не в кружке — вместо поля ввода большая кнопка «Вступить» */
+.join-bottom { display: block; width: 100%; margin-top: 10px; }
+.join-bottom[hidden] { display: none; }
 .member { padding: 4px 0; font-weight: 600; }
 .member-note { font-weight: normal; opacity: 0.75; font-size: 13px; }
 .readonly-note {
@@ -820,7 +839,7 @@ body.dark #private .btn.second, body.dark #reports .btn.second, body.dark #setti
 body.dark #settings .danger-text { color: #ffb4a8 !important; }
 
 /* Кнопка «Отправить» в чатах — как кнопки дизайнера, а не оранжевая */
-#chat .send .btn, #dm .send .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
+#chat .send .btn, #chat .join-bottom, #dm .send .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
 body.dark #chat-warning { color: #ffd2c8; }
 #dm .back { color: var(--login-link); }
 #dm .btn.danger-text { background: transparent; border: 2px solid currentColor; color: #a8401c !important; }
@@ -855,8 +874,8 @@ body.dark #dm .btn.danger-text { color: #ffb4a8 !important; }
 #messages .message .actions, #dm-messages .message .actions { display: none; }
 #messages .message.open .actions, #dm-messages .message.open .actions {
     display: flex; flex-direction: column; align-items: stretch; gap: 0;
-    position: absolute; top: 38px; right: 6px; z-index: 20;
-    min-width: 210px; padding: 6px;
+    position: fixed; z-index: 40;          /* место задаёт placeMenu() — всегда внутри экрана */
+    min-width: 210px; max-width: calc(100vw - 16px); padding: 6px;
     background: #ffffff; border-radius: 14px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
 }

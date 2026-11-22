@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=33">
+    <link rel="stylesheet" href="style.css?v=34">
 </head>
 <body>
 <div class="app">
@@ -126,17 +126,23 @@
 
     <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
     <section class="screen" id="chat">
-        <div class="chat-head"><h1 id="chat-title">Чат</h1></div>
-        <!-- Участники кружка и кнопка «Вступить» -->
-        <div class="club-bar">
-            <button class="chip" id="members-btn" onclick="toggleMembers()">👥 Участники</button>
-            <button class="chip" id="join-btn" data-roles="student" onclick="toggleJoin()">Вступить в кружок</button>
+        <!-- Шапка: нажми на название — откроются участники и «Выйти из кружка» -->
+        <div class="chat-head">
+            <button class="chat-title-btn" id="chat-title-btn" type="button" onclick="toggleClubPanel(event)" aria-expanded="false">
+                <h1 id="chat-title">Чат</h1>
+                <span class="chat-sub" id="members-btn">Участники</span>
+            </button>
+            <div class="club-panel" id="club-panel" hidden>
+                <div class="club-panel-title" id="members-count">Участники</div>
+                <div id="members-list"></div>
+                <button class="leave-btn" id="leave-btn" type="button" onclick="toggleJoin()">🚪 Выйти из кружка</button>
+            </div>
         </div>
-        <div id="members-list" hidden></div>
         <!-- Сообщения рисует script.js — у каждого кружка свои -->
         <div id="messages"></div>
         <p class="error" id="chat-warning"></p>
         <p class="readonly-note" data-roles="teacher" hidden id="chat-readonly"></p>
+        <button class="btn join-bottom" id="join-btn" type="button" onclick="toggleJoin()">Вступить в кружок</button>
         <div class="send" data-roles="student">
             <input type="text" id="new-message" placeholder="Сообщение...">
             <button class="btn small" onclick="sendMessage()">Отправить</button>
@@ -371,7 +377,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=33"></script>
-<script src="script.js?v=33"></script>
+<script src="sync.js?v=34"></script>
+<script src="script.js?v=34"></script>
 </body>
 </html>
