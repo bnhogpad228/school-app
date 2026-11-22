@@ -1398,7 +1398,7 @@ function applyRemote() {
             div.className = "event";
             div.id = e.id;
             div.innerHTML = '<b></b><span></span><div class="event-foot">Идут: <b class="count" data-base="1">1</b> ' +
-                '<button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div>';
+                '<button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду!</button></div>';
             div.querySelector("b").textContent = e.title;
             div.querySelector("span").textContent = e.when + (e.place ? " · " + e.place : "") + " · " + e.nick;
             document.getElementById("my-events").append(div);

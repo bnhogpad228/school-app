@@ -719,3 +719,83 @@ body.dark #ideas .new-form summary.btn { background: #4f97a6; color: #ffffff; bo
 /* Учитель-куратор: заметка в чате класса и список записавшихся */
 .curator-note { font-size: 14px; opacity: 0.85; text-align: center; margin: 4px 0 10px; }
 .who { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+/* ===== Правила общения — по макету дизайнера ===== */
+body:has(#rules:target) { background: var(--login-bg); }
+#rules { color: var(--login-text); }
+#rules h1 {
+    display: inline-block;
+    font-family: "Comic Relief", "Montserrat", sans-serif;
+    font-size: 32px;
+    margin: 18px 0 14px;
+    padding-bottom: 4px;
+    border-bottom: 4px solid #7fdfbf;      /* мятное подчёркивание, как на макете */
+    border-radius: 2px;
+}
+body.dark #rules h1 { border-bottom-color: #4f97a6; }   /* в тёмной — бирюзовое */
+#rules .rules { list-style: none; counter-reset: rule; padding-left: 0; }
+#rules .rules li {
+    counter-increment: rule;
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 14px;
+    font-size: 17px;
+    line-height: 1.45;
+}
+#rules .rules li::before {
+    content: counter(rule) ".";            /* номер правила — цветной */
+    position: absolute; left: 0;
+    font-weight: 700;
+    color: #e8a46a;                        /* персиковый в светлой теме */
+}
+body.dark #rules .rules li::before { color: #3fae86; }   /* зелёный в тёмной */
+#rules .btn {
+    margin-top: 28px;
+    background: var(--login-button);
+    color: var(--login-button-text);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* ===== События по макету дизайнера: фон как у кружков, мятные (бирюзовые) карточки ===== */
+body:has(#events:target) { background: var(--login-bg); }
+#events { color: var(--login-text); }
+#events h1, #events h2, #events .new-form label { font-family: "Comic Relief", "Montserrat", sans-serif; }
+#events h1 { font-size: 30px; margin: 12px 0 10px; }
+#events .hint { color: var(--login-muted); }
+#events .new-form summary.btn {                       /* «+ Сообщить о событии» */
+    background: #9bbcc4; color: #10302a; border: none; font-weight: 700;
+}
+#events .new-form[open] { background: #a6e6cf; color: #10302a; }
+#events .new-form label { color: #10302a; font-size: 19px; font-weight: 700; }
+#events .new-form input[type="text"] {
+    background: #5fcfa8; color: #10302a; border: 2px solid #1d4d40;
+    border-radius: 999px; padding: 9px 16px; font-family: "Montserrat", sans-serif; font-weight: 400;
+}
+#events .new-form input[type="text"]::placeholder { color: #24594b; }
+#events .new-form .btn { background: #f5b552; color: #1d1d1d; font-weight: 700; }   /* «Опубликовать» — оранжевая */
+#events .event, #events .announcement { background: #a6e6cf; color: #10302a; border: none; }
+#events .event b { color: #10302a; }
+#events .event span, #events .event-foot { color: #2f5a4f; }
+#events .event-foot .go { background: #5fcfa8; color: #10302a; border: 2px solid #1d4d40; }
+#events .event-foot .go:disabled { background: transparent; color: #2f5a4f; border-color: #2f5a4f; }
+#events .event .mine-tag { color: #a8401c; }
+#events .who { color: #2f5a4f; }
+
+body.dark #events .new-form summary.btn { background: transparent; color: #ffffff; border: 2px solid #6cbac6; }
+body.dark #events .new-form[open] { background: #4f97a6; color: #ffffff; }
+body.dark #events .new-form label { color: #ffffff; }
+body.dark #events .new-form input[type="text"] { background: #3d8494; color: #ffffff; border-color: #173f4b; }
+body.dark #events .new-form input[type="text"]::placeholder { color: #cfe8ec; }
+body.dark #events .new-form .btn { background: #2e8a6a; color: #ffffff; }
+body.dark #events .event, body.dark #events .announcement { background: #3d8494; color: #ffffff; }
+body.dark #events .event b { color: #ffffff; }
+body.dark #events .event span, body.dark #events .event-foot, body.dark #events .who { color: #e1f1f4; }
+body.dark #events .event-foot .go { background: transparent; color: #ffffff; border: 2px solid #173f4b; }
+body.dark #events .event-foot .go:disabled { color: #cfe8ec; border-color: #cfe8ec; }
+body.dark #events .event .mine-tag { color: #ffffff; }
+/* Форма события как на макете: кнопка сверху, мятная карточка с полями, «Опубликовать» под ней */
+#events .new-form[open], body.dark #events .new-form[open] { background: transparent; padding: 0; }
+#events .new-form[open] summary { margin: 0 0 10px; }
+#events .form-card { background: #a6e6cf; border-radius: 22px; padding: 6px 14px 12px; }
+body.dark #events .form-card { background: #4f97a6; }
+#events .form-card .error:empty { display: none; }

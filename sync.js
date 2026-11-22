@@ -65,6 +65,10 @@ function ensureRemote() {
 }
 let outbox = readJson("schoolAppOutbox", []);   // что ещё не удалось отправить
 let remoteOnline = false;
+const SITE_VERSION = 28;         // меняем вместе с ?v= в index.html
+const SERVER_NEED = 3;           // какая версия функции нужна этому сайту
+let serverVersion = 0;
+let lastReject = "";             // что сервер отклонил последним (видно в «Настройках»)
 let claimed = "";                // для какого ника уже отправили «ник занят»
 let polling = false;
 
@@ -95,7 +99,12 @@ async function flushOutbox() {
             if (res.status >= 500) {
                 throw new Error("server " + res.status);
             }
-            // 4xx — событие неправильное, повторять бессмысленно: выбрасываем
+            if (res.status >= 400) {
+                // 4xx — сервер не принял событие: повторять бессмысленно, но показываем причину в «Настройках»
+                let text = "";
+                try { text = (await res.json()).error || ""; } catch (e) {}
+                lastReject = (item.ev.t || "") + ": " + (text || res.status);
+            }
         } catch (e) {
             remoteOnline = false;
             showSyncStatus();
@@ -124,6 +133,7 @@ async function poll() {
         }
         let data = await res.json();
         remoteOnline = true;
+        serverVersion = data.v || 1;
         if (data.events && data.events.length > 0 && key === remoteKey) {   // пока ждали ответа, мог войти другой
             store.events = store.events.concat(data.events);
             store.last = data.events[data.events.length - 1].k;
@@ -169,13 +179,20 @@ function showSyncStatus() {
     if (!box) {
         return;
     }
+    let text;
     if (!serverUrl()) {
-        box.textContent = "Режим прототипа: данные хранятся только на этом телефоне.";
+        text = "Режим прототипа: данные хранятся только на этом телефоне.";
+    } else if (remoteOnline && serverVersion < SERVER_NEED) {
+        text = "⚠️ Функция на сервере устарела (версия " + serverVersion + ", нужна " + SERVER_NEED + ") — обновите её код в Yandex Cloud.";
     } else if (remoteOnline && outbox.length === 0) {
-        box.textContent = "🟢 Сервер подключён: сообщения видят все ученики.";
+        text = "🟢 Сервер подключён: сообщения видят все ученики.";
     } else {
-        box.textContent = "⚪ Нет связи с сервером. Не отправлено: " + outbox.length + " — уйдёт, когда появится интернет.";
+        text = "⚪ Нет связи с сервером. Не отправлено: " + outbox.length + " — уйдёт, когда появится интернет.";
     }
+    if (lastReject) {
+        text += " Сервер не принял: " + lastReject + ".";
+    }
+    box.textContent = text + " Сайт v" + SITE_VERSION + (serverVersion ? ", сервер v" + serverVersion : "") + ".";
 }
 
 // ---------- Что пришло от других телефонов ----------

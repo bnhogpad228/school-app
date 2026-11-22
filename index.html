@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=27">
+    <link rel="stylesheet" href="style.css?v=28">
 </head>
 <body>
 <div class="app">
@@ -230,6 +230,7 @@
         </div>
         <details class="new-form" data-roles="student">
             <summary class="btn second">+ Сообщить о событии</summary>
+            <div class="form-card">
             <label>Что за событие?
                 <input type="text" id="event-title" maxlength="60" placeholder="Например, Турнир по шахматам">
             </label>
@@ -240,15 +241,16 @@
                 <input type="text" id="event-place" maxlength="40" placeholder="Например, каб. 301">
             </label>
             <p class="error" id="event-warning"></p>
-            <button class="btn" onclick="addEvent()">Опубликовать</button>
+            </div>
+            <button class="btn" onclick="addEvent()">+ Опубликовать</button>
         </details>
         <div id="my-events"></div>
         <div class="event" id="ev1"><b>Мини-футбол 5×5: нужны 2 запасных</b><span>Пятница, 15:30 · поле для мини-футбола</span>
-            <div class="event-foot">Идут: <b class="count">12</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
+            <div class="event-foot">Идут: <b class="count">12</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду!</button></div></div>
         <div class="event" id="ev2"><b>Опыты в химлабе: цветные реакции</b><span>Среда, 16:00 · кабинет химии</span>
-            <div class="event-foot">Идут: <b class="count">8</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
+            <div class="event-foot">Идут: <b class="count">8</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду!</button></div></div>
         <div class="event" id="ev3"><b>Настолки: знакомство 7–9 классов</b><span>Четверг, 16:00 · рекреация 2 этажа</span>
-            <div class="event-foot">Идут: <b class="count">5</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
+            <div class="event-foot">Идут: <b class="count">5</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду!</button></div></div>
     </section>
 
     <!-- ЭКРАН 7. Настройки -->
@@ -359,7 +361,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=27"></script>
-<script src="script.js?v=27"></script>
+<script src="sync.js?v=28"></script>
+<script src="script.js?v=28"></script>
 </body>
 </html>

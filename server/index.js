@@ -17,6 +17,7 @@
 //   MOD_CODE     — код модератора (без него нельзя скрывать сообщения и делать объявления)
 //   CURATOR_CODE — код учителя-куратора (те же права на объявления и жалобы)
 
+const VERSION = 3;                 // версия функции — приложение показывает её в «Настройках»
 const BUCKET = process.env.BUCKET;
 const SCHOOL_CODE = process.env.SCHOOL_CODE || "1234";
 const MOD_CODE = process.env.MOD_CODE || "5678";
@@ -180,7 +181,7 @@ module.exports.handler = async function (event, context) {
                 return reply(403, {error: "Неверный код школы"});
             }
             let events = await eventsAfter(String(query.after || ""), token, String(query.nick || ""));
-            return reply(200, {events: events});
+            return reply(200, {events: events, v: VERSION});
         }
         if (event.httpMethod === "POST") {
             let raw = event.isBase64Encoded ? Buffer.from(event.body || "", "base64").toString("utf8") : (event.body || "");
