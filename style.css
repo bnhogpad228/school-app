@@ -1,7 +1,7 @@
 /* ===== Рукописный шрифт Comic Relief — только для заголовка на экране входа ===== */
 @font-face {
     font-family: "Comic Relief";
-    src: url("fonts/ComicRelief-Bold.woff") format("woff");
+    src: url("ComicRelief-Bold.woff") format("woff");
     font-weight: 700;
     font-display: swap;
 }
@@ -9,13 +9,13 @@
 /* ===== Шрифт Montserrat лежит прямо в папке fonts — не зависит от Google и работает без VPN ===== */
 @font-face {
     font-family: "Fira Sans";            /* шрифт кнопок во всплывающем окне */
-    src: url("fonts/FiraSans-SemiBold.woff") format("woff");
+    src: url("FiraSans-SemiBold.woff") format("woff");
     font-weight: 600;
     font-display: swap;
 }
 @font-face {
     font-family: "Montserrat";
-    src: url("fonts/Montserrat.woff") format("woff");
+    src: url("Montserrat.woff") format("woff");
     font-weight: 100 900;      /* один файл на все толщины: от тонкого до жирного */
     font-display: swap;        /* пока шрифт грузится, текст показывается обычным шрифтом */
 }
