@@ -1,8 +1,8 @@
 // Service worker — «помощник» PWA. Он сохраняет файлы приложения на телефоне,
 // поэтому после первого открытия приложение запускается даже без интернета.
-const CACHE = "school-app-v37";   // при изменении файлов меняем номер версии
+const CACHE = "school-app-v37";   // при изменении файлов меняем номер версии (и ?v= в списке ниже)
 const FILES = [
-    "./", "./index.html", "./style.css?v=33", "./sync.js?v=33", "./script.js?v=33", "./manifest.json",
+    "./", "./index.html", "./style.css?v=37", "./sync.js?v=37", "./script.js?v=37", "./manifest.json",
     "./Montserrat.woff", "./ComicRelief-Bold.woff", "./FiraSans-SemiBold.woff",
     "./icon-192.png", "./icon-512.png"
 ];
@@ -37,7 +37,10 @@ self.addEventListener("fetch", function (event) {
             caches.open(CACHE).then(function (cache) { cache.put(event.request, copy); });
             return response;
         }).catch(function () {
-            return caches.match(event.request);
+            // Нет сети: берём файл из кэша; если версия в ?v= другая — подойдёт и тот же файл с другим номером
+            return caches.match(event.request).then(function (found) {
+                return found || caches.match(event.request, {ignoreSearch: true});
+            });
         })
     );
 });
