@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=37">
 </head>
 <body>
 <div class="app">
@@ -133,6 +133,7 @@
                 <span class="chat-sub" id="members-btn">Участники</span>
             </button>
             <div class="club-panel" id="club-panel" hidden>
+                <p class="club-time" id="club-time"></p>
                 <div class="club-panel-title" id="members-count">Участники</div>
                 <div id="members-list"></div>
                 <button class="leave-btn" id="leave-btn" type="button" onclick="toggleJoin()">🚪 Выйти из кружка</button>
@@ -232,8 +233,13 @@
                 <button class="btn" onclick="addAnnouncement()">Опубликовать</button>
             </details>
             <div id="announcements"></div>
-            <h2 class="events-title">Афиша</h2>
         </div>
+        <!-- Расписание кружков: когда и где собираются. Нажал — открылся чат кружка -->
+        <div id="schedule-box">
+            <h2>🗓 Кружки на неделе</h2>
+            <div class="card schedule" id="schedule"></div>
+        </div>
+        <h2 class="events-title">Афиша</h2>
         <details class="new-form" data-roles="student">
             <summary class="btn second">+ Сообщить о событии</summary>
             <div class="form-card">
@@ -380,7 +386,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=36"></script>
-<script src="script.js?v=36"></script>
+<script src="sync.js?v=37"></script>
+<script src="script.js?v=37"></script>
 </body>
 </html>
