@@ -536,10 +536,11 @@ body:not(.role-student) #events .go { display: none; }
 .ok-note { color: var(--main); font-weight: bold; }
 
 /* ===== Кружки по макету: круги «шахматкой» — персиковый и мятный (в тёмной теме — бирюзовый и зелёный) ===== */
-#clubs-grid .club:nth-child(4n+1) .circle, #clubs-grid .club:nth-child(4n+4) .circle { background: #f3c99c; }
-#clubs-grid .club:nth-child(4n+2) .circle, #clubs-grid .club:nth-child(4n+3) .circle { background: #7fdfbf; }
-body.dark #clubs-grid .club:nth-child(4n+1) .circle, body.dark #clubs-grid .club:nth-child(4n+4) .circle { background: #4f97a6; }
-body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club:nth-child(4n+3) .circle { background: #2e8a6a; }
+/* По новому макету: первый круг (класс) — мятный/зелёный, дальше «шахматкой» */
+#clubs-grid .club:nth-child(4n+1) .circle, #clubs-grid .club:nth-child(4n+4) .circle { background: #7fdfbf; }
+#clubs-grid .club:nth-child(4n+2) .circle, #clubs-grid .club:nth-child(4n+3) .circle { background: #f3c99c; }
+body.dark #clubs-grid .club:nth-child(4n+1) .circle, body.dark #clubs-grid .club:nth-child(4n+4) .circle { background: #2e8a6a; }
+body.dark #clubs-grid .club:nth-child(4n+2) .circle, body.dark #clubs-grid .club:nth-child(4n+3) .circle { background: #4f97a6; }
 
 /* ===== Объявления класса ===== */
 #announcements-box h2 { margin-top: 4px; }
@@ -632,7 +633,7 @@ body:has(#clubs:target) { background: var(--login-bg); }
     margin: 12px 0 18px;
 }
 #clubs .hint { color: var(--login-muted); }
-#clubs .club { color: var(--login-text); font-size: 17px; font-weight: 600; }
+#clubs .club { color: var(--login-text); font-size: 18px; font-weight: 700; font-family: "Comic Relief", "Montserrat", sans-serif; }   /* подписи рукописные, как на макете */
 #clubs .grid { gap: 22px 12px; }
 /* Круги крупнее, значки — линиями, как нарисовала дизайнер */
 #clubs .circle {
@@ -666,10 +667,11 @@ body.dark #clubs .circle .icon { color: #10232a; }   /* тёмная тема: �
 #clubs .new-form:not([open]) { display: none; }            /* форма спрятана, пока не нажали круг */
 #clubs .create-tile .circle {
     background: transparent !important;
-    border: 3px dashed var(--login-text);
-    opacity: 0.85;
+    border: 2px dashed #e8a46a;            /* как на макете: тонкий пунктир, в светлой теме — персиковый */
 }
-#clubs .create-tile .circle .icon { color: var(--login-text) !important; width: 46px; height: 46px; stroke-width: 2; }
+#clubs .create-tile .circle .icon { color: #e8a46a !important; width: 46px; height: 46px; stroke-width: 1.4; }
+body.dark #clubs .create-tile .circle { border-color: #4f97a6; }
+body.dark #clubs .create-tile .circle .icon { color: #4f97a6 !important; }
 #clubs .grid .club.wide { grid-column: 1 / -1; }          /* последний нечётный круг — по центру */
 /* «Скрипка_7В печатает…» в личном чате */
 .typing { color: var(--chat-text); opacity: 0.8; font-style: italic; font-size: 14px; margin: 4px 0 8px; }
