@@ -1,7 +1,8 @@
 // =====================================================================
 // ПОЛЬЗОВАТЕЛИ И ПАМЯТЬ НА ТЕЛЕФОНЕ (localStorage)
 // На одном телефоне может быть несколько профилей. Все они лежат в users —
-// это как словарь в Python: { "Енот_7Б": {password: "...", grade: "7Б", state: {...}}, ... }.
+// это как словарь в Python: { "Енот_7Б": {pass: {salt, hash}, grade: "7Б", state: {...}}, ... }.
+// Пароль в открытом виде нигде не хранится — только его «отпечаток» (хеш), см. hashPassword
 // Данные хранятся только в браузере этого телефона, на сервер ничего не уходит.
 // =====================================================================
 const SCHOOL_CODE = "1234";   // код школы — один для всех учеников (в настоящей версии проверял бы сервер)
@@ -93,7 +94,44 @@ function startSession(nick) {
 // =====================================================================
 // РЕГИСТРАЦИЯ: код школы, ник, класс, пароль и повтор пароля
 // =====================================================================
-function register() {
+// =====================================================================
+// ПАРОЛИ: храним не сам пароль, а его хеш — «отпечаток», из которого пароль не восстановить.
+// PBKDF2: пароль + случайная «соль» прогоняются через SHA-256 100 000 раз — подбирать долго.
+// Соль своя у каждого — одинаковые пароли дают разные хеши
+// =====================================================================
+function toHex(buffer) {
+    return Array.from(new Uint8Array(buffer)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+}
+
+async function hashPassword(password, salt) {
+    let key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    let bits = await crypto.subtle.deriveBits({name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode(salt), iterations: 100000}, key, 256);
+    return toHex(bits);
+}
+
+async function makePass(password) {
+    let salt = toHex(crypto.getRandomValues(new Uint8Array(16)));   // случайная соль
+    return {salt: salt, hash: await hashPassword(password, salt)};
+}
+
+// Верный ли пароль. Старые профили (до хеширования) хранили пароль как есть — переводим их на хеш
+async function checkPassword(nick, password) {
+    let u = users[nick];
+    if (!u) {
+        return false;
+    }
+    if (u.pass) {
+        return (await hashPassword(password, u.pass.salt)) === u.pass.hash;
+    }
+    if (u.password === password) {
+        u.pass = await makePass(password);
+        delete u.password;                 // открытый пароль больше не храним
+        return true;
+    }
+    return false;
+}
+
+async function register() {
     let role = document.querySelector('input[name="role"]:checked').value;
     // .value — то, что ввели в поле; .trim() убирает пробелы по краям (как strip() в Python)
     let code = document.getElementById("reg-code").value.trim();
@@ -125,7 +163,7 @@ function register() {
         error.textContent = "Такой ник нарушает правила общения — придумай другой";
         return;
     }
-    let user = {password: password, role: role, grade: "", state: emptyState()};
+    let user = {role: role, grade: "", state: emptyState()};
     if (grade === "" || letter === "") {   // класс нужен всем: модератор — тоже ученик
         error.textContent = "Выбери номер и букву класса";
         return;
@@ -149,6 +187,10 @@ function register() {
     if (owner && owner !== DEVICE_ID) {
         error.textContent = "Этот ник уже занят в школе — придумай другой";
         return;
+    }
+    user.pass = await makePass(password); // await — ждём, пока посчитается хеш
+    if (users[nick]) {
+        return;                            // двойное нажатие: профиль уже создан
     }
     users[nick] = user;
     currentNick = nick;
@@ -191,13 +233,13 @@ function changeRole() {
 // =====================================================================
 // ВХОД: код школы, ник и пароль
 // =====================================================================
-function login() {
+async function login() {
     let code = document.getElementById("code").value.trim();
     let nick = document.getElementById("nick").value.trim();
     let password = document.getElementById("password").value;
     let error = document.getElementById("login-error");
 
-    if (!users[nick] || users[nick].password !== password) {
+    if (!(await checkPassword(nick, password))) {
         // Не говорим, что именно неверно — так сложнее подбирать чужие ники
         error.textContent = "Неверный ник или пароль";
         return;
@@ -208,6 +250,7 @@ function login() {
         return;
     }
     startSession(nick);
+    saveState();             // если пароль был старого вида — сохраняем его уже хешем
 }
 
 // Выйти: профиль остаётся на телефоне, но войти можно только снова по паролю
