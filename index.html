@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 <div class="app">
@@ -58,15 +58,15 @@
         <p class="role-question">Кто регистрируется?</p>
         <div class="role-pick">
             <label><input type="radio" name="role" value="student" checked onchange="changeRole()"><span><i>🎒</i>Ученик</span></label>
-            <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span><i>📚</i>Учитель</span></label>
+            <label><input type="radio" name="role" value="teacher" onchange="changeRole()"><span><i>🛡️</i>Модератор</span></label>
         </div>
         <p class="hint" id="role-about">Пишешь в чатах кружков и своего класса, предлагаешь инициативы и события.</p>
         <label>Код школы
             <input type="text" id="reg-code" placeholder="Его выдаёт классный руководитель" autocomplete="off">
         </label>
-        <!-- Только для учителя: второй, отдельный код — чтобы ученик не зарегистрировался учителем -->
-        <label data-reg="teacher" hidden>Код учителя
-            <input type="text" id="reg-teacher-code" placeholder="Его выдаёт администрация школы" autocomplete="off">
+        <!-- Только для модератора: второй, отдельный код — чтобы любой ученик не стал модератором -->
+        <label data-reg="teacher" hidden>Код модератора
+            <input type="text" id="reg-teacher-code" placeholder="Его выдаёт совет старшеклассников" autocomplete="off">
         </label>
         <label><span id="reg-nick-label">Ник (не фамилия!)</span>
             <input type="text" id="reg-nick" placeholder="Например, Енот_7Б" autocomplete="off">
@@ -75,7 +75,7 @@
         <div class="row" data-reg="student teacher">
             <select id="reg-grade">
                 <option value="">Номер</option>
-                <option>5</option><option>6</option><option>7</option><option>8</option>
+                <option>7</option><option>8</option>
                 <option>9</option><option>10</option><option>11</option>
             </select>
             <select id="reg-letter">
@@ -84,7 +84,7 @@
             </select>
         </div>
         <div data-reg="teacher" hidden>
-            <p class="pick-title">Какие кружки вы ведёте</p>
+            <p class="pick-title">Какие кружки модерируете</p>
             <div class="club-checks">
                 <label><input type="checkbox" name="teach-club" value="music"><span>🎵 Музыка</span></label>
                 <label><input type="checkbox" name="teach-club" value="basketball"><span>🏀 Баскетбол</span></label>
@@ -141,7 +141,7 @@
     <!-- ЭКРАН 4. Кружки по интересам -->
     <section class="screen" id="clubs">
         <h1 id="clubs-title">Кружки и классы</h1>
-        <p class="hint" id="clubs-empty" hidden>Вы не ведёте кружков. Объявления для класса — в «Событиях», жалобы из чата класса — в «Жалобах».</p>
+        <p class="hint" id="clubs-empty" hidden>Вы не модерируете кружки. Объявления для класса — в «Событиях», жалобы из чата класса — в «Жалобах».</p>
         <details class="new-form" data-roles="student">
             <summary class="btn second">✕ Закрыть</summary>
             <label>Название
@@ -193,15 +193,15 @@
         </details>
         <div id="my-ideas"></div>
         <div class="card" id="idea1">
-            <h2>Покрасим скамейки во дворе</h2>
-            <p class="muted">Предложил: Сова_9В</p>
-            <p>Участников: <b class="count">3</b></p>
+            <h2>Вырастим помидоры в школьной теплице</h2>
+            <p class="muted">Предложил: Росток_9Б</p>
+            <p>Участников: <b class="count">4</b></p>
             <button class="btn" onclick="join(this)" data-done="Ты в команде">Я в деле</button>
         </div>
         <div class="card" id="idea2">
-            <h2>Соберём команду на хакатон</h2>
-            <p class="muted">Предложил: Пиксель_8А</p>
-            <p>Участников: <b class="count">2</b></p>
+            <h2>Квест-знакомство по новой школе</h2>
+            <p class="muted">Предложил: Компас_8А</p>
+            <p>Участников: <b class="count">3</b></p>
             <button class="btn" onclick="join(this)" data-done="Ты в команде">Я в деле</button>
         </div>
     </section>
@@ -238,11 +238,11 @@
             <button class="btn" onclick="addEvent()">Опубликовать</button>
         </details>
         <div id="my-events"></div>
-        <div class="event" id="ev1"><b>Турнир 3×3 по баскетболу</b><span>Пятница, 15:00 · спортзал</span>
+        <div class="event" id="ev1"><b>Мини-футбол 5×5: нужны 2 запасных</b><span>Пятница, 15:30 · поле для мини-футбола</span>
             <div class="event-foot">Идут: <b class="count">12</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
-        <div class="event" id="ev2"><b>Посадка деревьев</b><span>Суббота, 11:00 · школьный двор</span>
+        <div class="event" id="ev2"><b>Опыты в химлабе: цветные реакции</b><span>Среда, 16:00 · кабинет химии</span>
             <div class="event-foot">Идут: <b class="count">8</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
-        <div class="event" id="ev3"><b>Клуб настольных игр</b><span>Среда, 16:00 · каб. 204</span>
+        <div class="event" id="ev3"><b>Настолки: знакомство 7–9 классов</b><span>Четверг, 16:00 · рекреация 2 этажа</span>
             <div class="event-foot">Идут: <b class="count">5</b> <button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div></div>
     </section>
 
@@ -274,7 +274,7 @@
         <div class="card">
             <h2>Общение</h2>
             <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
-            <p data-roles="teacher" hidden>Учитель не видит личные сообщения учеников и не пишет им лично — личка только между учениками и только с согласия обоих.</p>
+            <p data-roles="teacher" hidden>Модератор не видит личные сообщения учеников — личка только между учениками и только с согласия обоих.</p>
             <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
@@ -311,10 +311,10 @@
         <button class="btn logout danger-text" id="dm-block" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
-    <!-- ЭКРАН 10. Жалобы — только для учителя -->
+    <!-- ЭКРАН 10. Жалобы — только для модератора -->
     <section class="screen" id="reports">
-        <h1>Жалобы учеников</h1>
-        <p class="hint">Жалобы на сообщения в ваших кружках и в чате вашего класса. Личные сообщения учеников учитель не видит.</p>
+        <h1>Жалобы</h1>
+        <p class="hint">Жалобы на сообщения в ваших кружках и в чате вашего класса. Личные сообщения учеников модератор не видит.</p>
         <p class="ok-note" id="reports-done"></p>
         <div id="reports-list"></div>
     </section>
@@ -353,6 +353,6 @@
     </nav>
 
 </div>
-<script src="script.js?v=14"></script>
+<script src="script.js?v=17"></script>
 </body>
 </html>
