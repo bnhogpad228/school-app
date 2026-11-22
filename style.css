@@ -799,3 +799,31 @@ body.dark #events .event .mine-tag { color: #ffffff; }
 #events .form-card { background: #a6e6cf; border-radius: 22px; padding: 6px 14px 12px; }
 body.dark #events .form-card { background: #4f97a6; }
 #events .form-card .error:empty { display: none; }
+
+/* ===== Остальные экраны в стиле дизайнера: личные сообщения, личный чат, жалобы, настройки ===== */
+/* Тот же фон, карточки и кнопки, что у «Кружков», «Идей» и «Событий» */
+body:has(#private:target), body:has(#dm:target), body:has(#reports:target), body:has(#settings:target) { background: var(--login-bg); }
+#private, #dm, #reports, #settings { color: var(--login-text); }
+#private h1, #dm h1, #reports h1, #settings h1,
+#private h2, #reports h2, #settings h2 { font-family: "Comic Relief", "Montserrat", sans-serif; }
+#private h1, #dm h1, #reports h1, #settings h1 { font-size: 30px; margin: 12px 0 10px; }
+#private .hint, #dm .hint, #reports .hint, #settings .hint, #private .status { color: var(--login-muted); }
+#private .card, #private .dm-row, #reports .card, #settings .card { background: #a6e6cf; color: #10302a; border: none; }
+#private .btn, #dm .btn, #reports .btn, #settings .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
+#private .btn.second, #reports .btn.second, #settings .btn.second { background: transparent; color: #10302a; border: 2px solid #1d4d40; }
+#dm input[type="text"] { background: var(--login-field); color: var(--login-field-text); border: none; }
+#dm input[type="text"]::placeholder { color: var(--login-placeholder); }
+body.dark #private .card, body.dark #private .dm-row, body.dark #reports .card, body.dark #settings .card { background: #3d8494; color: #ffffff; }
+body.dark #private .status { color: #d9eef2; }
+body.dark #private .btn.second, body.dark #reports .btn.second, body.dark #settings .btn.second { color: #ffffff; border-color: #cfe8ec; }
+#settings .danger-text { color: #a8401c !important; }
+body.dark #settings .danger-text { color: #ffb4a8 !important; }
+
+/* Кнопка «Отправить» в чатах — как кнопки дизайнера, а не оранжевая */
+#chat .send .btn, #dm .send .btn { background: var(--login-button); color: var(--login-button-text); font-weight: 700; }
+body.dark #chat-warning { color: #ffd2c8; }
+#dm .back { color: var(--login-link); }
+#dm .btn.danger-text { background: transparent; border: 2px solid currentColor; color: #a8401c !important; }
+body.dark #dm .btn.danger-text { color: #ffb4a8 !important; }
+#chat .send input { background: var(--login-field); color: var(--login-field-text); border: none; }
+#chat .send input::placeholder { color: var(--login-placeholder); }
