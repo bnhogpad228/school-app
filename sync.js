@@ -8,7 +8,7 @@
 // =====================================================================
 
 // Адрес функции в Yandex Cloud. Пусто — сервер выключен (режим прототипа)
-const SERVER_URL_DEFAULT = "";
+const SERVER_URL_DEFAULT = "https://functions.yandexcloud.net/d4etcajfq6mamt671k0e";
 
 function serverUrl() {
     try {
