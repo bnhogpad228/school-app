@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
 <div class="app">
@@ -126,7 +126,7 @@
 
     <!-- ЭКРАН 3. Чат клуба. У каждого сообщения — «Скрыть» и «Пожаловаться» -->
     <section class="screen" id="chat">
-        <h1 id="chat-title">Чат</h1>
+        <div class="chat-head"><h1 id="chat-title">Чат</h1></div>
         <!-- Участники кружка и кнопка «Вступить» -->
         <div class="club-bar">
             <button class="chip" id="members-btn" onclick="toggleMembers()">👥 Участники</button>
@@ -307,8 +307,19 @@
 
     <!-- ЭКРАН 9. Один личный чат -->
     <section class="screen" id="dm">
-        <a class="back" href="#private">← Личные сообщения</a>
-        <h1 id="dm-title">Личный чат</h1>
+        <!-- Шапка остаётся наверху, когда листаешь переписку -->
+        <div class="chat-head">
+            <a class="back" href="#private">← Личные сообщения</a>
+            <div class="head-row">
+                <h1 id="dm-title">Личный чат</h1>
+                <button class="more head-more" type="button" aria-label="Действия с чатом" onclick="toggleDmMenu(event)">⋯</button>
+            </div>
+            <div class="dm-menu" id="dm-menu" hidden>
+                <button type="button" onclick="clearDmForMe()">🧹 Очистить переписку у себя</button>
+                <a href="#rules">📜 Правила общения</a>
+                <button type="button" class="danger-text" id="dm-block" onclick="blockDm()">⛔ Заблокировать собеседника</button>
+            </div>
+        </div>
         <div id="dm-messages"></div>
         <p class="typing" id="dm-typing" hidden></p>
         <p class="error" id="dm-warning"></p>
@@ -316,7 +327,6 @@
             <input type="text" id="dm-input" placeholder="Сообщение...">
             <button class="btn small" onclick="sendDm()">Отправить</button>
         </div>
-        <button class="btn logout danger-text" id="dm-block" onclick="blockDm()">Заблокировать собеседника</button>
     </section>
 
     <!-- ЭКРАН 10. Жалобы — только для модератора -->
@@ -361,7 +371,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=32"></script>
-<script src="script.js?v=32"></script>
+<script src="sync.js?v=33"></script>
+<script src="script.js?v=33"></script>
 </body>
 </html>

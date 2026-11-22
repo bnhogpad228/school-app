@@ -354,6 +354,14 @@ function report(button) {
 function showReported(button) {
     button.textContent = "Жалоба отправлена модератору";
     button.disabled = true;                // повторно нажать нельзя
+    // Пометка видна и без меню «⋯»
+    let message = button.closest(".message");
+    if (message && !message.querySelector(".report-note")) {
+        let note = document.createElement("p");
+        note.className = "report-note";
+        note.textContent = "🚩 Жалоба отправлена модератору";
+        message.append(note);
+    }
 }
 
 // =====================================================================
@@ -907,6 +915,7 @@ function addMessageToChat(id, nick, text, container = "messages", canWritePrivat
             '<button onclick="report(this)">Пожаловаться</button>' + privateButton + modButton + '</div>';
     }
     message.dataset.gid = id;
+    addMoreButton(message);                // «⋯» — действия с сообщением спрятаны в меню
 
     // Ник и текст вставляем через textContent — так чужой код в сообщении не выполнится
     message.querySelector("b").textContent = nick;
@@ -984,6 +993,7 @@ function showMyMessageState(message, data) {
         message.querySelector("p").textContent = "🚫 Сообщение удалено";
         message.querySelector("p").className = "muted";
         message.querySelector(".actions").remove();          // удалённое больше не изменить
+        if (message.querySelector(".more")) { message.querySelector(".more").remove(); }
     } else if (data.edited) {
         let mark = document.createElement("span");
         mark.className = "edited";
@@ -1052,6 +1062,8 @@ function editMessage(button) {
     p.innerHTML = '<input type="text" class="edit-input">';
     p.querySelector("input").value = data.text;                // через value — безопасно
     p.querySelector("input").focus();
+    message.classList.remove("open");
+    message.classList.add("editing");      // «Сохранить» и «Отмена» — прямо под полем, не в меню
     button.closest(".actions").innerHTML =
         '<button onclick="saveEdit(this)">Сохранить</button>' +
         '<button onclick="cancelEdit(this)">Отмена</button>';
@@ -1087,6 +1099,7 @@ function cancelEdit(button) {
 
 // Вернуть сообщение в обычный вид после правки
 function finishEdit(message, data) {
+    message.classList.remove("editing");
     message.querySelector("p").textContent = data.text;
     message.querySelector(".actions").innerHTML = MY_ACTIONS;
     showMyMessageState(message, data);
@@ -1673,6 +1686,7 @@ function openDm(nick) {
     currentDm = nick;
     document.getElementById("dm-typing").hidden = true;
     document.getElementById("dm-block").hidden = false;
+    document.getElementById("dm-menu").hidden = true;
     document.getElementById("dm-title").textContent = "✉️ " + nick;
     document.getElementById("dm-messages").innerHTML = "";
     let messages = dmOf(nick).messages;
@@ -2125,4 +2139,63 @@ function markAllSeen() {
             markSeen("club:" + id, othersMessagesIn(id));
         }
     }
+}
+
+// =====================================================================
+// МЕНЮ «⋯»: действия с сообщением и с личным чатом
+// «Скрыть», «Пожаловаться», «Написать лично», «Изменить», «Удалить» — в меню
+// у каждого сообщения: в чате чище, а всё по-прежнему в одно касание от сообщения
+// =====================================================================
+function addMoreButton(message) {
+    let more = document.createElement("button");
+    more.className = "more";
+    more.type = "button";
+    more.textContent = "⋯";
+    more.setAttribute("aria-label", "Действия с сообщением");
+    more.onclick = function (event) {
+        event.stopPropagation();           // чтобы клик не закрыл меню сразу же
+        let open = message.classList.contains("open");
+        closeMenus();
+        message.classList.toggle("open", !open);
+    };
+    message.append(more);
+}
+
+function closeMenus() {
+    for (let m of document.querySelectorAll(".message.open")) {
+        m.classList.remove("open");
+    }
+    let dmMenu = document.getElementById("dm-menu");
+    if (dmMenu) { dmMenu.hidden = true; }
+}
+
+// Клик мимо меню или по пункту меню — меню закрывается
+document.addEventListener("click", function (event) {
+    if (event.target.closest(".dm-menu") && !event.target.closest("button")) {
+        return;
+    }
+    if (!event.target.closest(".more")) {
+        setTimeout(closeMenus, 0);         // после того, как пункт меню отработал
+    }
+});
+
+// «⋯» рядом с ником собеседника в личном чате
+function toggleDmMenu(event) {
+    event.stopPropagation();
+    let menu = document.getElementById("dm-menu");
+    let open = !menu.hidden;
+    closeMenus();
+    menu.hidden = open;
+}
+
+// Очистить переписку только у себя: у собеседника она останется
+function clearDmForMe() {
+    let nick = currentDm;
+    askConfirm("Очистить переписку?", "Сообщения пропадут только у тебя. У " + nick + " переписка останется.", "Очистить", function () {
+        for (let m of dmOf(nick).messages) {
+            m.deletedForMe = true;
+        }
+        saveState();
+        openDm(nick);
+    });
 }
