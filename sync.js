@@ -45,10 +45,27 @@ function writeJson(key, value) {
     } catch (e) {}
 }
 
-// Всё, что пришло с сервера (копия хранится на телефоне — видно и без интернета)
-let remote = readJson("schoolAppRemote", {events: [], last: ""});
+// Всё, что пришло с сервера (копия хранится на телефоне — видно и без интернета).
+// У каждого ученика своя копия: личные сообщения сервер отдаёт только их участникам
+let remote = {events: [], last: ""};
+let remoteKey = null;
+
+function myNick() {
+    return typeof currentNick === "undefined" ? "" : currentNick;
+}
+
+// Вошёл другой ученик — берём его копию
+function ensureRemote() {
+    let key = "schoolAppRemote|" + myNick();
+    if (key !== remoteKey) {
+        remoteKey = key;
+        remote = readJson(key, {events: [], last: ""});
+    }
+    return remote;
+}
 let outbox = readJson("schoolAppOutbox", []);   // что ещё не удалось отправить
 let remoteOnline = false;
+let claimed = "";                // для какого ника уже отправили «ник занят»
 let polling = false;
 
 // Отправить событие на сервер. mod = true — действие модератора (нужен код модератора)
@@ -93,18 +110,28 @@ async function poll() {
     polling = true;
     try {
         await flushOutbox();
-        let url = serverUrl() + "?code=" + encodeURIComponent(SCHOOL_CODE) + "&after=" + encodeURIComponent(remote.last);
+        let store = ensureRemote();
+        let key = remoteKey;
+        let url = serverUrl() + "?code=" + encodeURIComponent(SCHOOL_CODE) + "&nick=" + encodeURIComponent(myNick()) +
+                  "&after=" + encodeURIComponent(store.last);
         let res = await fetch(url);
         if (!res.ok) {
             throw new Error("server " + res.status);
         }
         let data = await res.json();
         remoteOnline = true;
-        if (data.events && data.events.length > 0) {
-            remote.events = remote.events.concat(data.events);
-            remote.last = data.events[data.events.length - 1].k;
-            writeJson("schoolAppRemote", remote);
+        if (data.events && data.events.length > 0 && key === remoteKey) {   // пока ждали ответа, мог войти другой
+            store.events = store.events.concat(data.events);
+            store.last = data.events[data.events.length - 1].k;
+            writeJson(key, store);
             onRemoteChange();
+        }
+        // Ник ещё не занят на сервере (профиль создан до подключения сервера) — занимаем,
+        // иначе другие ученики не смогут написать ему лично
+        let me = myNick();
+        if (me !== "" && key === remoteKey && remoteNickOwner(me) === "" && claimed !== me) {
+            claimed = me;
+            remoteSend({t: "nick", nick: me, grade: users[me].grade, role: users[me].role || "student"});
         }
     } catch (e) {
         remoteOnline = false;
@@ -113,11 +140,12 @@ async function poll() {
     showSyncStatus();
 }
 
-// Пришло новое — перерисовываем открытый экран
+// Пришло новое — переносим в приложение и перерисовываем открытый экран
 function onRemoteChange() {
-    if (typeof currentNick === "undefined" || currentNick === "") {
+    if (myNick() === "") {
         return;
     }
+    applyRemote();                         // кружки, инициативы, события, личка (в script.js)
     if (location.hash === "#chat" && !document.querySelector("#messages .edit-input")) {
         let nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
         let y = window.scrollY;
@@ -149,13 +177,13 @@ function showSyncStatus() {
 // ---------- Что пришло от других телефонов ----------
 
 function othersEvents(type) {
-    return remote.events.filter(function (e) { return e.t === type && e.dev !== DEVICE_ID; });
+    return ensureRemote().events.filter(function (e) { return e.t === type && e.dev !== DEVICE_ID; });
 }
 
 // Сообщения других телефонов: общий номер → данные (с учётом правок и удалений)
 function remoteMessageMap() {
     let map = {};
-    for (let e of remote.events) {
+    for (let e of ensureRemote().events) {
         if (e.dev === DEVICE_ID) {
             continue;                      // свои сообщения и так есть на телефоне
         }
@@ -192,7 +220,7 @@ function remoteMessagesIn(club, grade) {
 
 // Класс ученика с другого телефона — по его сообщениям или занятому нику
 function remoteGradeOf(nick) {
-    for (let e of remote.events) {
+    for (let e of ensureRemote().events) {
         if ((e.t === "nick" || e.t === "msg") && e.nick === nick && e.grade) {
             return e.grade;
         }
@@ -202,7 +230,7 @@ function remoteGradeOf(nick) {
 
 // Кто занял ник: номер телефона или "" (свободен)
 function remoteNickOwner(nick) {
-    for (let e of remote.events) {
+    for (let e of ensureRemote().events) {
         if (e.t === "nick" && e.nick.toLowerCase() === nick.toLowerCase()) {
             return e.dev;
         }
@@ -213,7 +241,7 @@ function remoteNickOwner(nick) {
 // Скрытые и оставленные модераторами (с любого телефона)
 function remoteModeration() {
     let result = {hidden: [], dismissed: []};
-    for (let e of remote.events) {
+    for (let e of ensureRemote().events) {
         if (e.t === "hide") { result.hidden.push(e.gid); }
         if (e.t === "keep") { result.dismissed.push(e.gid); }
     }
@@ -228,6 +256,23 @@ function remoteAnnouncements() {
     }
     return othersEvents("ann").filter(function (a) { return !gone[a.from + "|" + a.time]; })
                               .map(function (a) { return {grade: a.grade, from: a.from, text: a.text, time: a.time}; });
+}
+
+// Ученик с другого телефона (а не придуманный и не с этого телефона)
+function isRealRemote(nick) {
+    let owner = remoteNickOwner(nick);
+    return owner !== "" && owner !== DEVICE_ID;
+}
+
+// Кто сейчас в кружке / идёт / в команде (с других телефонов): ник → класс
+function remoteMembers(target) {
+    let members = {};
+    for (let e of ensureRemote().events) {
+        if (e.dev === DEVICE_ID || e.target !== target) { continue; }
+        if (e.t === "join") { members[e.nick] = e.grade || ""; }
+        if (e.t === "leave") { delete members[e.nick]; }
+    }
+    return members;
 }
 
 // Опрос: сразу после загрузки и потом раз в 4 секунды, пока приложение открыто

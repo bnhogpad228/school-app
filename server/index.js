@@ -36,8 +36,22 @@ const TYPES = {
     hide:   ["gid"],                                         // модератор скрыл у всех
     keep:   ["gid"],                                         // модератор оставил (жалоба отклонена)
     ann:    ["grade", "from", "text", "time"],               // объявление для класса
-    anndel: ["from", "time"]                                 // объявление удалено
+    anndel: ["from", "time"],                                // объявление удалено
+    club:   ["id", "name", "icon", "owner"],                 // ученик создал кружок
+    join:   ["target", "nick", "grade"],                     // вступил в кружок / «Я в деле» / «Пойду»
+    leave:  ["target", "nick"],                              // вышел из кружка
+    idea:   ["id", "title", "text", "nick"],                 // новая инициатива
+    event:  ["id", "title", "when", "place", "nick"],        // новое событие в афише
+    // Личные сообщения — их сервер отдаёт только двоим участникам
+    dmreq:  ["from", "to"],                                  // просит разрешения писать
+    dmok:   ["from", "to"],                                  // разрешил
+    dm:     ["from", "to", "i", "text", "time"],             // сообщение
+    dmedit: ["from", "to", "i", "text"],
+    dmdel:  ["from", "to", "i"],
+    dmblock:   ["from", "to"],
+    dmunblock: ["from", "to"]
 };
+const ID = /^[a-z0-9]{1,60}$/;
 const MOD_ONLY = ["hide", "keep", "ann", "anndel"];
 
 function reply(status, data) {
@@ -70,7 +84,16 @@ function clean(ev) {
             out[field] = String(value).slice(0, field === "text" ? 500 : 60);
         }
     }
-    if (ev.t === "msg" && (!out.text || !/^[a-z0-9]+$/.test(out.club || ""))) {
+    if (ev.t === "msg" && (!out.text || !ID.test(out.club || ""))) {
+        return null;
+    }
+    if ((ev.t === "club" || ev.t === "idea" || ev.t === "event") && !ID.test(out.id || "")) {
+        return null;
+    }
+    if ((ev.t === "join" || ev.t === "leave") && (!ID.test(out.target || "") || !out.nick)) {
+        return null;
+    }
+    if (ev.t.startsWith("dm") && (!out.from || !out.to)) {
         return null;
     }
     return out;
@@ -104,8 +127,8 @@ async function readEvent(key, token) {
     return JSON.parse(await res.text());
 }
 
-// Новые события после файла after
-async function eventsAfter(after, token) {
+// Новые события после файла after. Личные сообщения — только тем двоим, кому они принадлежат
+async function eventsAfter(after, token, nick) {
     if (Date.now() - listedAt > 2500) {          // список обновляем не чаще раза в 2,5 секунды (экономим запросы)
         keys = await listKeys(token);
         listedAt = Date.now();
@@ -117,8 +140,10 @@ async function eventsAfter(after, token) {
         let loaded = await Promise.all(part.map(function (k) { return readEvent(k, token).catch(function () { return null; }); }));
         part.forEach(function (k, n) { if (loaded[n]) { cache.set(k, loaded[n]); } });
     }
-    return fresh.filter(function (k) { return cache.has(k); })
-                .map(function (k) { return Object.assign({k: k}, cache.get(k)); });
+    return fresh.filter(function (k) {
+        let ev = cache.get(k);
+        return ev && (!ev.t.startsWith("dm") || ev.from === nick || ev.to === nick);
+    }).map(function (k) { return Object.assign({k: k}, cache.get(k)); });
 }
 
 async function saveEvent(ev, token) {
@@ -152,7 +177,7 @@ module.exports.handler = async function (event, context) {
             if (query.code !== SCHOOL_CODE) {
                 return reply(403, {error: "Неверный код школы"});
             }
-            let events = await eventsAfter(String(query.after || ""), token);
+            let events = await eventsAfter(String(query.after || ""), token, String(query.nick || ""));
             return reply(200, {events: events});
         }
         if (event.httpMethod === "POST") {

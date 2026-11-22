@@ -49,6 +49,15 @@ function roleOf(nick) {
 function myRole() {
     return roleOf(currentNick);
 }
+// Номер для нового кружка / инициативы / события — общий для всех телефонов
+function newId(prefix) {
+    return prefix + DEVICE_ID + Date.now().toString(36);
+}
+// Старые кружки myclub0, myclub1 были только на одном телефоне — на сервер их не отправляем
+function isLocalOnly(id) {
+    return /^myclub\d+$/.test(id);
+}
+
 // Модератор — тоже ученик: у него есть класс, он пишет в чатах и в личке,
 // а сверху у него права модератора в выбранных кружках и в чате своего класса
 function isModerator() {
@@ -78,6 +87,7 @@ function startSession(nick) {
     state = users[nick].state;
     restoreScreen();         // показываем сообщения, жалобы и т.д. этого пользователя
     location.hash = "rules"; // переходим на экран правил
+    poll();                  // сразу спрашиваем сервер, что нового
 }
 
 // =====================================================================
@@ -356,6 +366,11 @@ function reportClubs() {
     if (u.grade) {
         list.push("class");
     }
+    for (let id in CLUBS) {
+        if (id.startsWith("myclub")) {
+            list.push(id);                 // кружки, созданные учениками, модерируют все модераторы
+        }
+    }
     return list;
 }
 
@@ -491,9 +506,6 @@ function renderChat() {
         if (currentClub === "class" && users[nick].grade !== classGrade()) {
             continue;                      // в чате класса — только ученики этого класса
         }
-        if (currentClub.startsWith("myclub") && nick !== CLUBS[currentClub].owner) {
-            continue;                      // свои кружки пока видит только создатель
-        }
         let list = users[nick].state.myMessages || [];
         for (let i = 0; i < list.length; i++) {
             let my = list[i];
@@ -510,8 +522,8 @@ function renderChat() {
             all.push({nick: nick, i: i, my: my});
         }
     }
-    // Сообщения с других телефонов — пришли с сервера (свои кружки пока не синхронизируются)
-    if (!currentClub.startsWith("myclub")) {
+    // Сообщения с других телефонов — пришли с сервера
+    if (!isLocalOnly(currentClub)) {
         for (let m of remoteMessagesIn(currentClub, classGrade())) {
             if (users[m.nick]) {
                 continue;                  // этот ученик есть на телефоне — его сообщения уже добавлены
@@ -523,8 +535,7 @@ function renderChat() {
     for (let item of all) {
         let gid = item.gid || "u-" + item.nick + "-" + item.i;    // общий номер — для модерации
         let id = item.nick === currentNick && !item.gid ? "my" + item.i : gid;
-        // с другого телефона «Написать лично» пока нет: личка между телефонами — следующий шаг
-        let message = addMessageToChat(id, item.nick, item.my.deleted ? "" : item.my.text, "messages", !item.gid);
+        let message = addMessageToChat(id, item.nick, item.my.deleted ? "" : item.my.text);
         message.dataset.gid = gid;
         showMyMessageState(message, item.my);
     }
@@ -584,8 +595,10 @@ function clubMembers(id) {
         let inClub = id === "class" ? users[n].grade === classGrade() : (users[n].state.joinedClubs || []).includes(id);
         if (inClub) { add(n, users[n].grade); }
     }
-    if (!id.startsWith("myclub")) {
-        for (let m of remoteMessagesIn(id, classGrade())) { add(m.nick, m.grade); }   // с других телефонов
+    if (!isLocalOnly(id)) {
+        for (let m of remoteMessagesIn(id, classGrade())) { add(m.nick, m.grade); }   // писали с других телефонов
+        let joined = remoteMembers(id);                                               // вступили с других телефонов
+        for (let n in joined) { add(n, joined[n]); }
     }
     for (let m of club.messages) { add(m[0], ""); }
     for (let n of CLUB_EXTRA[id] || []) { add(id === "class" ? n + "_" + classGrade() : n, ""); }
@@ -638,6 +651,9 @@ function toggleJoin() {
         state.joinedClubs.splice(i, 1);    // splice(i, 1) — удалить один элемент, как del list[i]
     }
     saveState();
+    if (!isLocalOnly(currentClub)) {
+        remoteSend({t: i === -1 ? "join" : "leave", target: currentClub, nick: currentNick, grade: classGrade()});
+    }
     updateClubBar();
 }
 
@@ -841,7 +857,7 @@ function sendMessage() {
     // id своего сообщения: my0, my1, my2... — номер в списке myMessages
     let message = addMessageToChat("my" + index, currentNick, text);
     message.dataset.gid = "u-" + currentNick + "-" + index;            // общий номер — для модерации
-    if (!currentClub.startsWith("myclub")) {
+    if (!isLocalOnly(currentClub)) {
         remoteSend({t: "msg", nick: currentNick, grade: classGrade(), club: currentClub, i: index, text: text, time: time});
     }
     input.value = "";                      // очищаем поле
@@ -862,6 +878,15 @@ function myMessageData(id) {
     let last = id.lastIndexOf("-");                           // номер — после последнего дефиса
     let nick = id.slice(3, last);                             // ник — между «dm-» и номером
     return state.dm[nick].messages[Number(id.slice(last + 1))];
+}
+
+// Правка или удаление в личке с живым учеником — сообщаем серверу. id вида dm-Ник-3
+function sendDmChange(id, type, text) {
+    let last = id.lastIndexOf("-");
+    let nick = id.slice(3, last);
+    if (dmOf(nick) && dmOf(nick).real) {
+        remoteSend({t: type, from: currentNick, to: nick, i: Number(id.slice(last + 1)), text: text});
+    }
 }
 
 // Показать, что сообщение удалено у всех или изменено
@@ -912,6 +937,8 @@ function deleteMessage(forAll) {
         saveState();
         if (message.id.startsWith("my")) {
             remoteSend({t: "del", gid: message.dataset.gid});
+        } else {
+            sendDmChange(message.id, "dmdel", "");
         }
         showMyMessageState(message, data);
     } else {
@@ -957,6 +984,8 @@ function saveEdit(button) {
         saveState();
         if (message.id.startsWith("my")) {
             remoteSend({t: "edit", gid: message.dataset.gid, text: text});
+        } else {
+            sendDmChange(message.id, "dmedit", text);
         }
     }
     finishEdit(message, data);
@@ -1032,19 +1061,32 @@ function join(button) {
     if (!state.joined.includes(card.id)) {
         state.joined.push(card.id);
         saveState();
+        remoteSend({t: "join", target: card.id, nick: currentNick, grade: classGrade()});
     }
     showJoined(card);
+    updateCounts();
 }
 
 function showJoined(card) {
-    let count = card.querySelector(".count");
     let button = card.querySelector("button");
     if (!button || button.disabled) {
-        return;                            // уже отмечено — второй раз не прибавляем
+        return;
     }
-    count.textContent = Number(count.textContent) + 1;   // Number() — как int() в Python
     button.textContent = button.dataset.done;            // текст после нажатия берём из data-done
     button.disabled = true;
+}
+
+// Сколько людей в команде / идёт: сколько было + я + ученики с других телефонов
+function updateCounts() {
+    for (let count of document.querySelectorAll("#ideas .count, #events .count")) {
+        if (count.dataset.base === undefined) {
+            count.dataset.base = count.textContent;   // запоминаем число из карточки один раз
+        }
+        let card = count.closest(".card, .event");
+        let total = Number(count.dataset.base) + (state.joined.includes(card.id) ? 1 : 0);   // Number() — как int()
+        total += Object.keys(remoteMembers(card.id)).length;   // Object.keys — как list(dict.keys())
+        count.textContent = total;
+    }
 }
 
 // =====================================================================
@@ -1061,9 +1103,11 @@ function addIdea() {
     if (stopRudeOrBlocked(title + " " + text, warn)) {
         return;                            // инициатива тоже проходит фильтр
     }
-    state.myIdeas.push({title: title, text: text});
+    let idea = {id: newId("myidea"), title: title, text: text};
+    state.myIdeas.push(idea);
     saveState();
     drawMyIdea(state.myIdeas.length - 1);
+    remoteSend({t: "idea", id: idea.id, title: title, text: text, nick: currentNick});
     document.getElementById("idea-title").value = "";
     document.getElementById("idea-text").value = "";
     document.querySelector("#ideas .new-form").open = false;   // сворачиваем форму
@@ -1073,8 +1117,8 @@ function drawMyIdea(i) {
     let idea = state.myIdeas[i];
     let card = document.createElement("div");
     card.className = "card";
-    card.id = "myidea" + i;
-    card.innerHTML = '<h2></h2><p class="muted"></p><p class="mine-tag">Ты автор</p><p>Участников: <b class="count">1</b></p>';
+    card.id = idea.id || "myidea" + i;
+    card.innerHTML = '<h2></h2><p class="muted"></p><p class="mine-tag">Ты автор</p><p>Участников: <b class="count" data-base="1">1</b></p>';
     card.querySelector("h2").textContent = idea.title;           // textContent — безопасно
     card.querySelector(".muted").textContent = idea.text;
     document.getElementById("my-ideas").prepend(card);          // новая — сверху
@@ -1092,9 +1136,11 @@ function addEvent() {
     if (stopRudeOrBlocked(title + " " + when + " " + place, warn)) {
         return;
     }
-    state.myEvents.push({title: title, when: when, place: place});
+    let ev = {id: newId("myevent"), title: title, when: when, place: place};
+    state.myEvents.push(ev);
     saveState();
     drawMyEvent(state.myEvents.length - 1);
+    remoteSend({t: "event", id: ev.id, title: title, when: when, place: place, nick: currentNick});
     for (let id of ["event-title", "event-when", "event-place"]) {
         document.getElementById(id).value = "";
     }
@@ -1105,8 +1151,8 @@ function drawMyEvent(i) {
     let ev = state.myEvents[i];
     let div = document.createElement("div");
     div.className = "event";
-    div.id = "myevent" + i;
-    div.innerHTML = '<b></b><span></span><div class="event-foot">Идут: <b class="count">1</b> <span class="mine-tag">Ты организатор</span></div>';
+    div.id = ev.id || "myevent" + i;
+    div.innerHTML = '<b></b><span></span><div class="event-foot">Идут: <b class="count" data-base="1">1</b> <span class="mine-tag">Ты организатор</span></div>';
     div.querySelector("b").textContent = ev.title;
     div.querySelector("span").textContent = ev.when + (ev.place ? " · " + ev.place : "");
     document.getElementById("my-events").prepend(div);
@@ -1144,9 +1190,11 @@ function addClub() {
     if (stopRudeOrBlocked(name, warn)) {
         return;                            // название тоже проходит фильтр
     }
-    state.myClubs.push({name: name, icon: icon});
+    let club = {id: newId("myclub"), name: name, icon: icon};
+    state.myClubs.push(club);
     saveState();
     let id = drawMyClub(state.myClubs.length - 1);
+    remoteSend({t: "club", id: club.id, name: name, icon: icon, owner: currentNick});
     document.getElementById("club-name").value = "";
     document.querySelector("#clubs .new-form").open = false;
     openClub(id);                          // сразу открываем чат нового кружка
@@ -1155,7 +1203,7 @@ function addClub() {
 
 // Добавить свой кружок в список и в сетку кружков. Возвращает его id (myclub0, myclub1...)
 function drawMyClub(i) {
-    return drawClub("myclub" + i, state.myClubs[i], currentNick);
+    return drawClub(state.myClubs[i].id || "myclub" + i, state.myClubs[i], currentNick);
 }
 
 // Значки для своих кружков — линиями, в том же стиле, что и значки в сетке (как на макете).
@@ -1209,6 +1257,100 @@ function drawClub(id, club, owner) {
 }
 
 // =====================================================================
+// С ДРУГИХ ТЕЛЕФОНОВ: переносим пришедшее с сервера в приложение
+// =====================================================================
+function applyRemote() {
+    // Кружки, созданные другими учениками
+    for (let e of othersEvents("club")) {
+        if (!CLUBS[e.id]) {
+            drawClub(e.id, {name: e.name, icon: e.icon}, e.owner);
+        }
+    }
+    applyClubFilter();
+    // Инициативы и события других учеников — сверху списка
+    for (let e of othersEvents("idea")) {
+        if (!document.getElementById(e.id)) {
+            let card = document.createElement("div");
+            card.className = "card";
+            card.id = e.id;
+            card.innerHTML = '<h2></h2><p class="muted"></p><p class="muted author"></p>' +
+                '<p>Участников: <b class="count" data-base="1">1</b></p>' +
+                '<button class="btn" onclick="join(this)" data-done="Ты в команде">Я в деле</button>';
+            card.querySelector("h2").textContent = e.title;              // textContent — безопасно
+            card.querySelector(".muted").textContent = e.text || "";
+            card.querySelector(".author").textContent = "Предложил: " + e.nick;
+            document.getElementById("my-ideas").append(card);
+            if (state.joined.includes(e.id)) { showJoined(card); }
+        }
+    }
+    for (let e of othersEvents("event")) {
+        if (!document.getElementById(e.id)) {
+            let div = document.createElement("div");
+            div.className = "event";
+            div.id = e.id;
+            div.innerHTML = '<b></b><span></span><div class="event-foot">Идут: <b class="count" data-base="1">1</b> ' +
+                '<button class="go" onclick="join(this)" data-done="Ты идёшь ✓">Пойду</button></div>';
+            div.querySelector("b").textContent = e.title;
+            div.querySelector("span").textContent = e.when + (e.place ? " · " + e.place : "") + " · " + e.nick;
+            document.getElementById("my-events").append(div);
+            if (state.joined.includes(e.id)) { showJoined(div); }
+        }
+    }
+    updateCounts();
+    applyRemoteDm();
+}
+
+// Личные сообщения от учеников с других телефонов (сервер присылает только мои)
+function applyRemoteDm() {
+    let changed = false;
+    let last = state.dmApplied || "";
+    for (let e of ensureRemote().events) {
+        if (!e.t.startsWith("dm") || e.k <= last) {
+            continue;
+        }
+        state.dmApplied = e.k;
+        if (e.to !== currentNick || e.dev === DEVICE_ID) {
+            continue;                      // своё уже есть на телефоне
+        }
+        if (!state.dm) { state.dm = {}; }
+        let dm = state.dm[e.from];
+        changed = true;
+        if (e.t === "dmreq") {
+            if (!dm) {
+                state.dm[e.from] = {status: "incoming", messages: [], real: true};
+            } else if (dm.status === "pending") {
+                dm.status = "allowed";     // оба попросили друг друга — значит, оба согласны
+            }
+        } else if (!dm) {
+            continue;
+        } else if (e.t === "dmok" && dm.status === "pending") {
+            dm.status = "allowed";
+        } else if (e.t === "dm" && dm.status === "allowed") {
+            if (!dm.messages.some(function (m) { return m.from === e.from && m.ri === e.i; })) {   // some — как any() в Python
+                dm.messages.push({from: e.from, text: e.text, ri: e.i});   // ri — номер у отправителя
+            }
+        } else if (e.t === "dmedit" || e.t === "dmdel") {
+            let m = dm.messages.find(function (x) { return x.from === e.from && x.ri === e.i; });
+            if (m && e.t === "dmedit") { m.text = e.text; m.edited = true; }
+            if (m && e.t === "dmdel") { m.text = ""; m.deleted = true; }
+        } else if (e.t === "dmblock") {
+            dm.blockedMe = true;
+        } else if (e.t === "dmunblock") {
+            dm.blockedMe = false;
+        }
+    }
+    if (state.dmApplied !== last) {
+        saveState();
+    }
+    if (changed) {
+        renderPrivate();
+        if (location.hash === "#dm" && currentDm !== "" && !document.querySelector("#dm-messages .edit-input")) {
+            openDm(currentDm);             // открыт чат — дорисовываем новые сообщения
+        }
+    }
+}
+
+// =====================================================================
 // ЛИЧНЫЕ СООБЩЕНИЯ: каждый чат разрешается отдельно, только если согласны оба
 // Статусы: "incoming" — мне прислали запрос, "pending" — я отправил запрос,
 //          "allowed" — оба согласны, чат открыт, "blocked" — заблокирован
@@ -1239,12 +1381,17 @@ function requestPrivate(button) {
         location.hash = "private";         // он уже просил написать тебе — реши в «Личных»
         return;
     }
-    state.dm[nick] = {status: "pending", messages: []};
+    let real = isRealRemote(nick);         // живой ученик с другого телефона
+    state.dm[nick] = {status: "pending", messages: [], real: real};
     saveState();
     renderPrivate();                       // запрос сразу появляется в «Моих запросах»
     button.textContent = "Запрос отправлен";
     button.disabled = true;
-    simulateAnswer(nick);
+    if (real) {
+        remoteSend({t: "dmreq", from: currentNick, to: nick});   // решать будет он сам
+    } else {
+        simulateAnswer(nick);              // придуманный ученик «соглашается» сам
+    }
 }
 
 // В прототипе нет других живых людей, поэтому придуманный собеседник
@@ -1264,6 +1411,9 @@ function simulateAnswer(nick) {
 function acceptDm(nick) {
     dmOf(nick).status = "allowed";
     saveState();
+    if (dmOf(nick).real) {
+        remoteSend({t: "dmok", from: currentNick, to: nick});
+    }
     renderPrivate();
 }
 
@@ -1280,6 +1430,9 @@ function blockDm() {
     askConfirm("Заблокировать " + nick + "?", "Он не сможет тебе писать. Разблокировать можно в разделе ✉️ — переписка сохранится.", "Заблокировать", function () {
         dmOf(nick).status = "blocked";     // переписку не удаляем
         saveState();
+        if (dmOf(nick).real) {
+            remoteSend({t: "dmblock", from: currentNick, to: nick});
+        }
         location.hash = "private";
         renderPrivate();
     });
@@ -1288,6 +1441,9 @@ function blockDm() {
 function unblockDm(nick) {
     dmOf(nick).status = "allowed";         // чат возвращается вместе со всей перепиской
     saveState();
+    if (dmOf(nick).real) {
+        remoteSend({t: "dmunblock", from: currentNick, to: nick});
+    }
     renderPrivate();
 }
 
@@ -1410,7 +1566,7 @@ function openDm(nick) {
             continue;                      // удалённое «у себя» пропускаем (continue — как в Python)
         }
         let message = addMessageToChat(id, messages[i].from, messages[i].text, "dm-messages", false);
-        if (messages[i].from === currentNick) {
+        if (messages[i].from === currentNick || messages[i].deleted || messages[i].edited) {
             showMyMessageState(message, messages[i]);
         } else if (state.hidden.includes(id)) {
             showHidden(message);
@@ -1432,14 +1588,23 @@ function sendDm() {
         return;
     }
     let showDmWarning = function (t) { document.getElementById("dm-warning").textContent = t; };
+    if (dm.blockedMe) {
+        showDmWarning("Этот ученик ограничил личные сообщения — написать ему сейчас нельзя.");
+        return;
+    }
     if (stopRudeOrBlocked(text, showDmWarning)) {
         return;
     }
     dm.messages.push({from: currentNick, text: text});
     saveState();
-    addMessageToChat("dm-" + currentDm + "-" + (dm.messages.length - 1), currentNick, text, "dm-messages", false);
+    let index = dm.messages.length - 1;
+    addMessageToChat("dm-" + currentDm + "-" + index, currentNick, text, "dm-messages", false);
     input.value = "";
-    autoReply(currentDm, text);
+    if (dm.real) {
+        remoteSend({t: "dm", from: currentNick, to: currentDm, i: index, text: text, time: Date.now()});   // живому ученику
+    } else {
+        autoReply(currentDm, text);        // придуманный ученик отвечает сам
+    }
 }
 
 // В прототипе придуманный собеседник отвечает сам через пару секунд.
@@ -1645,6 +1810,7 @@ function restoreScreen() {
     for (let i = 0; i < state.myIdeas.length; i++) { drawMyIdea(i); }
     for (let i = 0; i < state.myEvents.length; i++) { drawMyEvent(i); }
     for (let i = 0; i < state.myClubs.length; i++) { drawMyClub(i); }
+    applyRemote();                         // кружки, инициативы, события и личка с других телефонов
     applyClubFilter();
     renderAnnouncements();
     document.getElementById("clubs-empty").hidden = true;
@@ -1674,6 +1840,7 @@ function restoreScreen() {
             showJoined(card);
         }
     }
+    updateCounts();
 
     // Если отправка была приостановлена — сразу показываем предупреждение
     if (state.blocked) {
