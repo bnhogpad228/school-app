@@ -402,6 +402,93 @@ const CLUBS = {
         ["Корень_10А", "Можно поставить опыт: с подкормкой и без."]
     ]}
 };
+// Когда и где собираются кружки (придумано под новую школу: актовый зал, спортзал, теплица, библиотека)
+// day: 1 — понедельник … 5 — пятница, как в Date.getDay()
+const CLUB_TIMES = {
+    basketball: {days: [1, 3], time: "15:10", place: "спортзал"},
+    music: {days: [2, 4], time: "16:00", place: "актовый зал"},
+    eco: {days: [2], time: "15:30", place: "теплица"},
+    robots: {days: [3], time: "16:00", place: "каб. информатики"},
+    photo: {days: [4], time: "15:30", place: "у главного входа"},
+    books: {days: [5], time: "15:00", place: "библиотека"}
+};
+const DAY_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+// «Вт и Чт, 16:00 · актовый зал»
+function clubTimeText(id) {
+    let t = CLUB_TIMES[id];
+    if (!t) {
+        return "";
+    }
+    let days = t.days.map(function (d) { return DAY_SHORT[d]; }).join(" и ");
+    return days + ", " + t.time + " · " + t.place;
+}
+
+// Расписание кружков на неделю в «Событиях»: сегодняшний день — первым.
+// Сразу видно два ближайших дня, остальные — по кнопке «Вся неделя»
+let scheduleOpen = false;
+function renderSchedule() {
+    let box = document.getElementById("schedule");
+    if (!box) {
+        return;
+    }
+    box.innerHTML = "";
+    let today = new Date().getDay();
+    let start = (today === 0 || today === 6) ? 1 : today;           // в выходные показываем с понедельника
+    let student = myRole() !== "curator";
+    let shown = 0;
+    for (let k = 0; k < 5; k++) {
+        let day = (start - 1 + k) % 5 + 1;                         // по кругу: сегодня, завтра … до пятницы и снова с понедельника
+        let items = [];
+        for (let id in CLUB_TIMES) {
+            if (CLUB_TIMES[id].days.includes(day) && CLUBS[id]) {
+                items.push(id);
+            }
+        }
+        if (items.length === 0) {
+            continue;
+        }
+        items.sort(function (a, b) { return CLUB_TIMES[a].time < CLUB_TIMES[b].time ? -1 : 1; });
+        let row = document.createElement("div");
+        row.className = "sched-day" + (day === today ? " today" : "") + (shown >= 2 && !scheduleOpen ? " more-day" : "");
+        shown++;
+        let label = document.createElement("b");
+        label.className = "sched-label";
+        label.textContent = day === today ? "Сегодня" : DAY_SHORT[day];
+        row.append(label);
+        let list = document.createElement("div");
+        list.className = "sched-list";
+        for (let id of items) {
+            let item = document.createElement(student ? "a" : "div");
+            item.className = "sched-item";
+            if (student) {
+                item.href = "#chat";
+                item.onclick = function () { openClub(id); };
+            }
+            let mine = student && isMember(id) ? " ✓" : "";
+            item.textContent = CLUB_TIMES[id].time + " " + CLUBS[id].icon + " " + CLUBS[id].name + mine;
+            let place = document.createElement("span");
+            place.textContent = " · " + CLUB_TIMES[id].place;
+            item.append(place);
+            list.append(item);
+        }
+        row.append(list);
+        box.append(row);
+    }
+    if (shown > 2) {
+        let toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "sched-toggle";
+        toggle.textContent = scheduleOpen ? "Свернуть ▴" : "Вся неделя ▾";
+        toggle.onclick = function () { scheduleOpen = !scheduleOpen; renderSchedule(); };
+        box.append(toggle);
+    }
+    let note = document.createElement("p");
+    note.className = "sched-note";
+    note.textContent = student ? "✓ — ты в этом кружке. Нажми на кружок, чтобы открыть его чат." : "Расписание кружков школы.";
+    box.append(note);
+}
+
 // Ещё придуманные участники кружков (кроме тех, кто пишет в чате)
 const CLUB_EXTRA = {
     music: ["Бас_9А", "Ритм_7А"], basketball: ["Защитник_9В"], robots: ["Шестерёнка_7Б", "Чип_11Б"],
@@ -509,6 +596,7 @@ function classAnnouncements() {
 }
 
 function renderAnnouncements() {
+    renderSchedule();
     let grade = classGrade();
     document.getElementById("announcements-box").hidden = grade === "";   // модератор без класса — без объявлений
     document.getElementById("ann-grade").textContent = grade;
@@ -706,6 +794,9 @@ function updateClubBar() {
     let count = members.length + " " + plural(members.length, "участник", "участника", "участников");
     document.getElementById("members-btn").textContent = "👥 " + count + " ▾";
     document.getElementById("members-count").textContent = "Участники · " + members.length;
+    let time = document.getElementById("club-time");
+    time.hidden = currentClub === "class";
+    time.textContent = clubTimeText(currentClub) ? "🗓 Встречи: " + clubTimeText(currentClub) : "🗓 Время встреч договариваемся в чате";
     let box = document.getElementById("members-list");
     box.innerHTML = "";
     for (let m of members) {
