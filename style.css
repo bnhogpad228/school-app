@@ -715,3 +715,7 @@ body.dark #ideas .card .mine-tag { color: #ffffff; }
 body.dark #ideas .card .btn { background: #2e8a6a; color: #ffffff; }          /* «Я в деле» — зелёная */
 body.dark #ideas .card .btn:disabled { background: #34525b; color: #ffffff; }
 body.dark #ideas .new-form summary.btn { background: #4f97a6; color: #ffffff; border-color: #4f97a6; }
+
+/* Учитель-куратор: заметка в чате класса и список записавшихся */
+.curator-note { font-size: 14px; opacity: 0.85; text-align: center; margin: 4px 0 10px; }
+.who { font-size: 14px; opacity: 0.85; margin-top: 6px; }

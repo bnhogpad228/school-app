@@ -15,10 +15,12 @@
 //   BUCKET       — имя приватного бакета для данных (например, shkolny-dvor-data)
 //   SCHOOL_CODE  — код школы (без него читать и писать нельзя)
 //   MOD_CODE     — код модератора (без него нельзя скрывать сообщения и делать объявления)
+//   CURATOR_CODE — код учителя-куратора (те же права на объявления и жалобы)
 
 const BUCKET = process.env.BUCKET;
 const SCHOOL_CODE = process.env.SCHOOL_CODE || "1234";
 const MOD_CODE = process.env.MOD_CODE || "5678";
+const CURATOR_CODE = process.env.CURATOR_CODE || "9012";   // код учителя-куратора
 const S3 = "https://storage.yandexcloud.net/" + BUCKET;
 
 // Кэш в памяти: пока функция «тёплая», уже прочитанные события не читаем из бакета повторно
@@ -193,8 +195,8 @@ module.exports.handler = async function (event, context) {
             if (!ev) {
                 return reply(400, {error: "Неверное событие"});
             }
-            if (MOD_ONLY.includes(ev.t) && body.mod !== MOD_CODE) {
-                return reply(403, {error: "Только для модератора"});
+            if (MOD_ONLY.includes(ev.t) && body.mod !== MOD_CODE && body.mod !== CURATOR_CODE) {
+                return reply(403, {error: "Только для модератора или учителя"});
             }
             let key = await saveEvent(ev, token);
             return reply(200, {k: key});

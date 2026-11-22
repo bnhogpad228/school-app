@@ -68,13 +68,17 @@ let remoteOnline = false;
 let claimed = "";                // для какого ника уже отправили «ник занят»
 let polling = false;
 
-// Отправить событие на сервер. mod = true — действие модератора (нужен код модератора)
+// Отправить событие на сервер. mod = true — действие модератора или учителя (нужен их код)
 function remoteSend(ev, mod) {
     if (!serverUrl()) {
         return;
     }
     ev.dev = DEVICE_ID;
-    outbox.push({ev: ev, mod: !!mod});
+    let code = "";
+    if (mod) {
+        code = isCurator() ? CURATOR_CODE : TEACHER_CODE;
+    }
+    outbox.push({ev: ev, mod: code});
     writeJson("schoolAppOutbox", outbox);
     flushOutbox();
 }
@@ -86,7 +90,7 @@ async function flushOutbox() {
             let res = await fetch(serverUrl(), {
                 method: "POST",
                 headers: {"Content-Type": "text/plain"},     // простой запрос — браузер не шлёт лишний OPTIONS
-                body: JSON.stringify({code: SCHOOL_CODE, mod: item.mod ? TEACHER_CODE : "", ev: item.ev})
+                body: JSON.stringify({code: SCHOOL_CODE, mod: item.mod === true ? TEACHER_CODE : (item.mod || ""), ev: item.ev})
             });
             if (res.status >= 500) {
                 throw new Error("server " + res.status);
@@ -236,6 +240,27 @@ function remoteNickOwner(nick) {
         }
     }
     return "";
+}
+
+// Роль ученика с другого телефона — по его «ник занят»
+function remoteRoleOf(nick) {
+    for (let e of ensureRemote().events) {
+        if (e.t === "nick" && e.nick === nick) {
+            return e.role || "student";
+        }
+    }
+    return "student";
+}
+
+// Учителя-кураторы класса (с других телефонов)
+function remoteCurators(grade) {
+    let list = [];
+    for (let e of ensureRemote().events) {
+        if (e.t === "nick" && e.role === "curator" && e.grade === grade && e.dev !== DEVICE_ID && !list.includes(e.nick)) {
+            list.push(e.nick);
+        }
+    }
+    return list;
 }
 
 // Скрытые и оставленные модераторами (с любого телефона)
