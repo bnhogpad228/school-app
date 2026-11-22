@@ -638,6 +638,10 @@ function renderChat() {
         }
     }
     updateClubBar();
+    if (currentClub !== "class") {
+        markSeen("club:" + currentClub, othersMessagesIn(currentClub));   // открыли кружок — всё прочитано
+        updateBadges();
+    }
 }
 
 // =====================================================================
@@ -729,6 +733,7 @@ function toggleJoin() {
     let i = state.joinedClubs.indexOf(currentClub);   // indexOf — как list.index, но -1 если нет
     if (i === -1) {
         state.joinedClubs.push(currentClub);
+        markSeen("club:" + currentClub, othersMessagesIn(currentClub));   // старые сообщения — не «новые»
     } else {
         state.joinedClubs.splice(i, 1);    // splice(i, 1) — удалить один элемент, как del list[i]
     }
@@ -852,6 +857,7 @@ function renderReports() {
     if (shown === 0) {
         box.innerHTML = '<p class="hint">Новых жалоб нет.</p>';
     }
+    setBadge("reports-badge", shown);      // красный кружок на «Жалобах» — сколько ждут решения
 }
 
 function resolveReport(gid, hide) {
@@ -1407,6 +1413,7 @@ function applyRemote() {
     }
     updateCounts();
     applyRemoteDm();
+    updateBadges();
 }
 
 // Личные сообщения от учеников с других телефонов (сервер присылает только мои)
@@ -1901,6 +1908,8 @@ window.addEventListener("hashchange", function () {
         location.hash = "private";         // личный чат открывается только из списка
     }
     markActiveTab();
+    scrollChatToEnd();
+    updateBadges();
     if (location.hash === "#events" && currentNick !== "") {
         renderAnnouncements();
     }
@@ -1955,6 +1964,8 @@ function restoreScreen() {
     renderPrivate();
     updateBadge();
     setTimeout(markActiveTab, 0);
+    setTimeout(updateBadges, 0);
+    scrollChatToEnd();
 
     // Рисуем чат открытого кружка (свои сообщения, скрытые, жалобы)
     renderChat();
@@ -1992,4 +2003,126 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(function () {
         // если не получилось (например, открыто как файл) — сайт просто работает как обычно
     });
+}
+
+// =====================================================================
+// ЧАТ ОТКРЫВАЕТСЯ НА ПОСЛЕДНЕМ СООБЩЕНИИ
+// Экран открывается по #chat / #dm, и браузер сам прыгает к его началу.
+// Чуть позже прокручиваем вниз — к самому новому сообщению.
+// =====================================================================
+function scrollChatToEnd() {
+    if (location.hash !== "#chat" && location.hash !== "#dm") {
+        return;
+    }
+    setTimeout(function () {
+        window.scrollTo(0, document.body.scrollHeight);
+    }, 30);
+}
+
+// =====================================================================
+// КРАСНЫЕ КРУЖКИ: где появилось новое
+//   «Чат» (чат класса, первая вкладка) — без кружка: его и так открывают первым.
+//   «Кружки» — новые сообщения в кружках, где ты участник; число и на самом кружке.
+//   «Идеи» — новые инициативы других учеников.
+//   «События» — новые события и объявления для твоего класса.
+//   «Жалобы» (модератор, учитель) — сколько жалоб ждут решения (в renderReports).
+//   «Сообщения» — запросы и непрочитанные в личке (updateBadge).
+// Запоминаем, сколько всего уже видели; кружок = сколько стало больше.
+// =====================================================================
+function setBadge(id, n) {
+    let badge = document.getElementById(id);
+    if (!badge) {
+        return;
+    }
+    badge.hidden = n <= 0;
+    badge.textContent = n > 9 ? "9+" : String(n);
+}
+
+// Сколько уже видел. В первый раз — считаем, что видел всё (старое не «новое»)
+function seenCount(key, current) {
+    if (!state.seen) { state.seen = {}; }
+    if (state.seen[key] === undefined) {
+        state.seen[key] = current;
+        saveState();
+    }
+    return state.seen[key];
+}
+
+function markSeen(key, current) {
+    if (!state.seen) { state.seen = {}; }
+    if (state.seen[key] !== current) {
+        state.seen[key] = current;
+        saveState();
+    }
+}
+
+// Сообщения других учеников в кружке (с этого телефона и с сервера)
+function othersMessagesIn(id) {
+    let n = 0;
+    for (let nick in users) {
+        if (nick === currentNick) { continue; }
+        for (let m of users[nick].state.myMessages || []) {
+            if (typeof m === "object" && m.club === id && !m.deleted) { n += 1; }
+        }
+    }
+    if (!isLocalOnly(id)) {
+        for (let m of remoteMessagesIn(id, classGrade())) {
+            if (!users[m.nick] && !m.deleted) { n += 1; }
+        }
+    }
+    return n;
+}
+
+function updateBadges() {
+    if (currentNick === "") {
+        return;
+    }
+    // Кружки: число на каждом кружке и сумма на вкладке
+    let total = 0;
+    for (let tile of document.querySelectorAll("#clubs-grid a.club[data-club]")) {
+        let id = tile.dataset.club;
+        let n = 0;
+        if (id !== "class" && CLUBS[id] && isMember(id)) {
+            let count = othersMessagesIn(id);
+            if (location.hash === "#chat" && currentClub === id) {
+                markSeen("club:" + id, count);          // этот кружок сейчас открыт
+            }
+            n = Math.max(0, count - seenCount("club:" + id, count));
+        }
+        let badge = tile.querySelector(".badge");
+        if (!badge) {
+            badge = document.createElement("b");
+            badge.className = "badge";
+            tile.querySelector(".circle").append(badge);
+        }
+        badge.hidden = n === 0;
+        badge.textContent = n > 9 ? "9+" : String(n);
+        total += n;
+    }
+    setBadge("clubs-badge", total);
+    // Идеи
+    let ideas = othersEvents("idea").length;
+    if (location.hash === "#ideas") { markSeen("ideas", ideas); }
+    setBadge("ideas-badge", ideas - seenCount("ideas", ideas));
+    // События: события других + объявления для класса не от меня
+    let events = othersEvents("event").length +
+                 classAnnouncements().filter(function (a) { return a.from !== currentNick; }).length;
+    if (location.hash === "#events") { markSeen("events", events); }
+    setBadge("events-badge", events - seenCount("events", events));
+    // Жалобы считает renderReports — обновляем, если ты не на этом экране (там список и так свежий)
+    if (canModerate() && location.hash !== "#reports") {
+        renderReports();
+    }
+}
+
+// Первая загрузка с сервера: всё, что уже было, считаем просмотренным
+function markAllSeen() {
+    markSeen("ideas", othersEvents("idea").length);
+    markSeen("events", othersEvents("event").length +
+             classAnnouncements().filter(function (a) { return a.from !== currentNick; }).length);
+    for (let id in CLUBS) {
+        if (id !== "class" && isMember(id)) {
+            markSeen("club:" + id, othersMessagesIn(id));
+        }
+    }
 }

@@ -827,3 +827,7 @@ body.dark #chat-warning { color: #ffd2c8; }
 body.dark #dm .btn.danger-text { color: #ffb4a8 !important; }
 #chat .send input { background: var(--login-field); color: var(--login-field-text); border: none; }
 #chat .send input::placeholder { color: var(--login-placeholder); }
+
+/* Красный кружок на кружке в сетке «Кружки» — в правом верхнем углу круга */
+#clubs .circle { position: relative; }
+#clubs .circle .badge { top: 2px; right: 2px; min-width: 26px; height: 26px; border-radius: 13px; font-size: 13px; font-family: "Montserrat", sans-serif; border-color: var(--login-bg); }

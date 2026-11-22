@@ -65,7 +65,7 @@ function ensureRemote() {
 }
 let outbox = readJson("schoolAppOutbox", []);   // что ещё не удалось отправить
 let remoteOnline = false;
-const SITE_VERSION = 31;         // меняем вместе с ?v= в index.html
+const SITE_VERSION = 32;         // меняем вместе с ?v= в index.html
 const SERVER_NEED = 3;           // какая версия функции нужна этому сайту
 let serverVersion = 0;
 let lastReject = "";             // что сервер отклонил последним (видно в «Настройках»)
@@ -146,9 +146,13 @@ async function poll() {
             return;
         }
         if (data.events && data.events.length > 0 && key === remoteKey) {   // пока ждали ответа, мог войти другой
+            let firstLoad = store.last === "";         // первая загрузка на этом телефоне: вся история сразу
             store.events = store.events.concat(data.events);
             store.last = data.events[data.events.length - 1].k;
             writeJson(key, store);
+            if (firstLoad && myNick() !== "") {
+                markAllSeen();                         // старое — не «новое»: без красных кружков на всю историю
+            }
             onRemoteChange();
         }
         // Ник ещё не занят на сервере (профиль создан до подключения сервера) — занимаем,
