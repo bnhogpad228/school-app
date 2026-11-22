@@ -922,3 +922,23 @@ body.dark .head-more { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
 body.dark .dm-menu { background: #173f4b; border: 1px solid #4f97a6; }
 body.dark .dm-menu button, body.dark .dm-menu a { color: #ffffff; }
 body.dark .dm-menu .danger-text { color: #ffb4a8 !important; }
+
+/* ===== Настройки — по макету Софии: зелёные карточки, кнопки-контуры под ними ===== */
+#settings .card { background: linear-gradient(180deg, #b4ecd6 0%, #9edbb4 100%); color: #10302a; border-radius: 22px; }
+body.dark #settings .card { background: linear-gradient(180deg, #3f9f7c 0%, #2f8466 100%); color: #ffffff; }
+#settings .card p { margin: 6px 0; }
+#settings .switch-row input { accent-color: #10302a; }
+body.dark #settings .switch-row input { accent-color: #ffffff; }
+.settings-actions { display: flex; flex-direction: column; gap: 12px; margin: 22px 0 8px; }
+.set-btn {
+    display: block; width: 100%; box-sizing: border-box; margin: 0; padding: 13px 16px;
+    border-radius: 999px; background: transparent; text-align: center; text-decoration: none;
+    font: inherit; font-size: 16px; font-weight: 700; line-height: 1.25; cursor: pointer;
+}
+.set-btn:active { transform: scale(0.98); opacity: 0.85; }
+.set-rules { border: 2px solid #e9a66b; color: #a8541c; }
+.set-logout { border: 2px solid #3f9f7c; color: #1f6f52; }
+.set-delete { border: 2px solid #10302a; color: #b3261e; }
+body.dark .set-rules { border-color: #7fd3d9; color: #bfeef1; }
+body.dark .set-logout { border-color: #3f9f7c; color: #8fe0c0; }
+body.dark .set-delete { border: 2px solid #0e2328; background: #0e2328; color: #ffb4a8; }

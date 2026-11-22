@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Школьный двор">
     <!-- ?v=номер — при каждой новой версии меняем номер, чтобы телефон не взял старый файл из кэша -->
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=36">
 </head>
 <body>
 <div class="app">
@@ -287,13 +287,16 @@
 
         <div class="card">
             <h2>Общение</h2>
-            <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе ✉️.</p>
+            <p data-roles="student">Личный чат с каждым учеником открывается, только если вы <b>оба</b> на это согласились. Запросы и чаты — в разделе «Сообщения».</p>
             <p data-roles="teacher" hidden>Как модератор вы не видите чужие личные сообщения — модерация только в чатах кружков и класса.</p>
-            <a class="btn second" href="#rules">Правила общения</a>
         </div>
 
-        <button class="btn logout" onclick="logout()">Выйти</button>
-        <button class="btn logout danger-text" onclick="deleteProfile()">Удалить мой профиль с этого телефона</button>
+        <!-- Кнопки — под карточками, как в макете Софии -->
+        <div class="settings-actions">
+            <a class="set-btn set-rules" href="#rules">Правила общения</a>
+            <button class="set-btn set-logout logout" type="button" onclick="logout()">Выйти</button>
+            <button class="set-btn set-delete" type="button" onclick="deleteProfile()">Удалить мой профиль<br>с этого телефона</button>
+        </div>
     </section>
 
     <!-- ЭКРАН 8. Личные сообщения: запросы и чаты. Каждый чат разрешается отдельно -->
@@ -377,7 +380,7 @@
     </nav>
 
 </div>
-<script src="sync.js?v=35"></script>
-<script src="script.js?v=35"></script>
+<script src="sync.js?v=36"></script>
+<script src="script.js?v=36"></script>
 </body>
 </html>
