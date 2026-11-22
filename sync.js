@@ -65,7 +65,7 @@ function ensureRemote() {
 }
 let outbox = readJson("schoolAppOutbox", []);   // что ещё не удалось отправить
 let remoteOnline = false;
-const SITE_VERSION = 28;         // меняем вместе с ?v= в index.html
+const SITE_VERSION = 29;         // меняем вместе с ?v= в index.html
 const SERVER_NEED = 3;           // какая версия функции нужна этому сайту
 let serverVersion = 0;
 let lastReject = "";             // что сервер отклонил последним (видно в «Настройках»)
@@ -166,7 +166,7 @@ function onRemoteChange() {
         renderChat();
         window.scrollTo(0, nearBottom ? document.body.scrollHeight : y);
     }
-    if (location.hash === "#reports" && isModerator()) {
+    if (location.hash === "#reports" && canModerate()) {
         renderReports();
     }
     if (location.hash === "#events") {

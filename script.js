@@ -1794,7 +1794,7 @@ function showProfile() {
     let extra = "";
     if (isModerator()) {
         let names = [];
-        for (let id of u.clubs || []) { names.push(CLUBS[id].name); }
+        for (let id of u.clubs || []) { if (CLUBS[id]) { names.push(CLUBS[id].name); } }
         extra = "Модератор: класс " + classGrade() + (names.length ? ", кружки: " + names.join(", ") : "");   // join — как ", ".join() в Python
     }
     if (isCurator()) {
